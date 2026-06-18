@@ -78,7 +78,7 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
     const kpiRows = hasDeptFilter ? f.filterRows(dept.rows) : kpiMonthly
 
     const totalValue  = f.dateRangeActive
-      ? filteredDetail.reduce((s,r) => s + (r.Value ?? 0), 0)
+      ? filteredDetail.reduce((s,r) => s + ((r.Dept && CORE_DEPTS.has(r.Dept)) ? (r.Value ?? 0) : 0), 0)
       : kpiRows.reduce((s,r) => s + (r.Actual ?? 0), 0)
     const totalTarget = kpiRows.reduce((s,r) => s + (r.Target ?? 0), 0)
     const achPct      = totalTarget > 0 ? (totalValue / totalTarget - 1) * 100 : null
