@@ -183,6 +183,7 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
           )}
           {/* 4. Jobs to action */}
           <KpiCard label="Total Jobs" value={kpi.coreJobs.toLocaleString()}
+            valueSub="Prod. only"
             sub1={`รวม ${kpi.totalJobs.toLocaleString()} รายการ (incl. OUTWORK ฯลฯ)`}
             accent="green"/>
           <KpiCard label="Jobs > 5,000 THB" value={kpi.bigJobs.toLocaleString()}

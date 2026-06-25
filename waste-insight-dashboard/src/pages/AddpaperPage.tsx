@@ -150,6 +150,7 @@ export function AddpaperPage({ actioned, salesMap }: { actioned: UseActionedJobs
             <KpiCard label="Waste Rate" value={`${kpi.wasteRate.toFixed(2)}%`} sub1="waste / sales revenue" accent="amber"/>
           )}
           <KpiCard label="Total Jobs" value={kpi.coreJobs.toLocaleString()}
+            valueSub="Prod. only"
             sub1={`รวม ${kpi.totalJobs.toLocaleString()} รายการ (incl. OUTWORK ฯลฯ)`}
             accent="green"/>
           <KpiCard label="Jobs > 5,000 THB" value={kpi.bigJobs.toLocaleString()}

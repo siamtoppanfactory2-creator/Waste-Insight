@@ -1,6 +1,7 @@
 interface KpiCardProps {
   label:       string
   value:       string
+  valueSub?:   string          // small text shown beside the main value
   sub1?:       string
   sub2?:       string
   trend1?:     'up-good' | 'up-bad' | 'down-good' | 'down-bad' | null
@@ -25,7 +26,7 @@ function TrendIcon({ t }: { t?: string | null }) {
   return <span className={`font-bold text-sm ${isGood ? 'text-emerald-600' : 'text-red-500'}`}>{isUp ? '▲' : '▼'}</span>
 }
 
-export function KpiCard({ label, value, sub1, sub2, trend1, trend2, accent = 'blue', progress, progressBad = true }: KpiCardProps) {
+export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, accent = 'blue', progress, progressBad = true }: KpiCardProps) {
   const a = accentMap[accent]
 
   // Progress bar color: in waste context, over target (>1) = bad = red
@@ -43,7 +44,10 @@ export function KpiCard({ label, value, sub1, sub2, trend1, trend2, accent = 'bl
       <span className="section-label pl-1">{label}</span>
 
       {/* Large value */}
-      <span className={`text-3xl font-bold tabular-nums pl-1 ${a.val}`}>{value}</span>
+      <div className="flex items-baseline gap-2 pl-1">
+        <span className={`text-3xl font-bold tabular-nums ${a.val}`}>{value}</span>
+        {valueSub && <span className="text-xs text-slate-400 font-medium">{valueSub}</span>}
+      </div>
 
       {/* Subtitles */}
       {(sub1 || sub2) && (
