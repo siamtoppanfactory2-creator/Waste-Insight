@@ -9,6 +9,7 @@ interface KpiCardProps {
   accent?:     'blue' | 'green' | 'red' | 'purple' | 'amber'
   progress?:   number | null   // 0–1.5 (actual/target ratio)
   progressBad?: boolean        // true = over target is bad (waste context)
+  breakdown?:  { label: string; value: string; color?: string }[]  // แยกบรรทัด เช่น Replan / Addpaper
 }
 
 const accentMap = {
@@ -26,7 +27,7 @@ function TrendIcon({ t }: { t?: string | null }) {
   return <span className={`font-bold text-sm ${isGood ? 'text-emerald-600' : 'text-red-500'}`}>{isUp ? '▲' : '▼'}</span>
 }
 
-export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, accent = 'blue', progress, progressBad = true }: KpiCardProps) {
+export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, accent = 'blue', progress, progressBad = true, breakdown }: KpiCardProps) {
   const a = accentMap[accent]
 
   // Progress bar color: in waste context, over target (>1) = bad = red
@@ -62,6 +63,18 @@ export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, ac
               <TrendIcon t={trend2}/>{sub2}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Breakdown แยกบรรทัด (เช่น Replan / Addpaper) */}
+      {breakdown && breakdown.length > 0 && (
+        <div className="pl-1 mt-1 space-y-0.5">
+          {breakdown.map((b,i) => (
+            <p key={i} className="text-xs flex items-center justify-between pr-2">
+              <span className="text-slate-500">{b.label}</span>
+              <span className="font-medium tabular-nums" style={{ color: b.color ?? '#475569' }}>{b.value}</span>
+            </p>
+          ))}
         </div>
       )}
 
