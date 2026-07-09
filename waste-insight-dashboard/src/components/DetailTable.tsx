@@ -3,6 +3,9 @@ import type { WasteRow, Dataset } from '../types'
 
 const PAGE_SIZE = 20
 
+// แผนกที่ผลิตภายในโรงงาน — เฉพาะงานเหล่านี้ที่ Value ≥ 5,000 ถึงจะไฮไลต์แดง
+const IN_HOUSE_DEPTS = new Set(['PR1','PR2','CON1','CON2','GL1','PDTN'])
+
 function fmtK(v: number | null) {
   if (!v) return '—'
   if (v >= 1_000_000) return `${(v/1_000_000).toFixed(2)}M`
@@ -89,7 +92,7 @@ export function DetailTable({ rows, dataset, actionedJos }: Props) {
     <div className="card min-h-[200px] relative" onMouseLeave={() => setTooltip(null)}>
       {/* Color legend */}
       <div className="flex items-center gap-3 px-4 pt-2 text-[10px] text-slate-400">
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-200 inline-block"/>Value ≥ 5,000</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-200 inline-block"/>Value ≥ 5,000 (ในโรงงาน)</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-100 border border-yellow-200 inline-block"/>เพิ่มใหม่ 7 วัน</span>
       </div>
 
@@ -131,7 +134,7 @@ export function DetailTable({ rows, dataset, actionedJos }: Props) {
               <tr><td colSpan={isReplan?9:8} className="text-center py-10 text-slate-400">No records</td></tr>
             ) : pageRows.map((r,i) => {
               const isNew  = isThisWeek(r.Date)
-              const isBig  = (r.Value ?? 0) >= 5000
+              const isBig  = (r.Value ?? 0) >= 5000 && !!r.Dept && IN_HOUSE_DEPTS.has(r.Dept)
               const isActioned = actionedJos?.has(rowKey(r))
               const rowBg  = isNew ? 'bg-yellow-50 hover:bg-yellow-100/60' : isBig ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-blue-50/40'
               return (

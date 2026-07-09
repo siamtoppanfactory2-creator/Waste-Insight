@@ -60,6 +60,7 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
 
   // Dept chart: year+month+cMonths (NOT dept) → shows all depts, dim handled in chart
   const chartDeptRows = useMemo(() => f.filterForDept(dept.rows), [f.filterForDept, dept.rows])
+  const chartDeptDetail = useMemo(() => f.filterForDept(detail.rows), [f.filterForDept, detail.rows])
 
   // Top10Jobs: full filter EXCEPT jobs → shows all top jobs, dim handled in chart
   const chartJobRows     = useMemo(() => f.filterForJobs(detail.rows),     [f.filterForJobs, detail.rows])
@@ -86,7 +87,7 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
     // Total jobs and big jobs from detail (fully filtered)
     const totalJobs  = filteredDetail.length  // all rows
     const coreJobs   = filteredDetail.filter(r => r.Dept && CORE_DEPTS.has(r.Dept)).length
-    const bigRows = filteredDetail.filter(r => (r.Value??0) >= 5000)
+    const bigRows = filteredDetail.filter(r => (r.Value??0) >= 5000 && r.Dept && CORE_DEPTS.has(r.Dept))
     const bigJobs = bigRows.length
     const bigVal  = bigRows.reduce((s,r) => s+(r.Value??0), 0)
 
@@ -201,7 +202,7 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
             onClickMonth={f.toggleChartMonth}
             salesMap={salesMap} dataset="Replan"
           />
-          <DeptChart deptRows={chartDeptRows} chartDepts={f.chartSel.depts} onClickDept={f.toggleChartDept}/>
+          <DeptChart deptRows={chartDeptRows} detailRows={chartDeptDetail} chartDepts={f.chartSel.depts} onClickDept={f.toggleChartDept}/>
         </>)}
       </div>
 

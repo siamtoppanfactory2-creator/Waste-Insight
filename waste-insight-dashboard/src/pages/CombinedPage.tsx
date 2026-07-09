@@ -89,11 +89,11 @@ export function CombinedPage({ salesMap }: { salesMap: SalesMap }) {
     const coreJobs  = replanJobs + addpaperJobs
     const totalJobs = rpDetailF.length + apDetailF.length
 
-    const bigRows = filteredDetail.filter(r => (r.Value??0) >= 5000)
+    const bigRows = filteredDetail.filter(r => (r.Value??0) >= 5000 && r.Dept && CORE_DEPTS.has(r.Dept))
     const bigJobs = bigRows.length
     const bigVal  = bigRows.reduce((s,r) => s+(r.Value??0), 0)
-    const replanBig   = rpDetailF.filter(r => (r.Value??0) >= 5000).length
-    const addpaperBig = apDetailF.filter(r => (r.Value??0) >= 5000).length
+    const replanBig   = rpDetailF.filter(r => (r.Value??0) >= 5000 && r.Dept && CORE_DEPTS.has(r.Dept)).length
+    const addpaperBig = apDetailF.filter(r => (r.Value??0) >= 5000 && r.Dept && CORE_DEPTS.has(r.Dept)).length
 
     // Sales = ยอดขายรวมของโรงงาน (ค่าเดียว ไม่บวก replan+addpaper) — dedupe ตามเดือน
     let totalSales = 0

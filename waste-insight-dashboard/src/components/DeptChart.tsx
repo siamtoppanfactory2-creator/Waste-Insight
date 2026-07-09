@@ -21,11 +21,29 @@ function barColor(p: number): string {
 
 interface Props {
   deptRows:    WasteRow[]   // dropdown-filtered only (not chartSel) — full dept list for display
+  detailRows:  WasteRow[]   // DETAIL rows (same filter as deptRows) — for counting jobs > 5,000
   chartDepts:  string[]     // chart-click selection → gray others
   onClickDept: (dept: string, shift: boolean) => void
 }
 
-export function DeptChart({ deptRows, chartDepts, onClickDept }: Props) {
+const BIG_JOB_THRESHOLD = 5000
+
+interface TipRow { dept: string; actual: number; target: number; achPct: number; bigJobs: number }
+
+function DeptTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: TipRow }> }) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div style={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', background: '#fff', padding: '8px 10px' }}>
+      <p style={{ fontWeight: 600, color: '#334155', marginBottom: 4 }}>{d.dept}</p>
+      <p style={{ color: '#059669' }}>Actual : {fmtFull(d.actual)}</p>
+      <p style={{ color: '#93c5fd' }}>Target : {fmtFull(d.target)}</p>
+      <p style={{ color: '#ef4444', marginTop: 2 }}>งานเกิน 5,000 : {d.bigJobs} งาน</p>
+    </div>
+  )
+}
+
+export function DeptChart({ deptRows, detailRows, chartDepts, onClickDept }: Props) {
   const map = new Map<string, { actual: number; target: number }>()
   deptRows.forEach(r => {
     if (!r.Dept) return
@@ -33,8 +51,15 @@ export function DeptChart({ deptRows, chartDepts, onClickDept }: Props) {
     map.set(r.Dept, { actual: e.actual + (r.Actual??0), target: e.target + (r.Target??0) })
   })
 
+  // count jobs ≥ threshold per dept
+  const bigMap = new Map<string, number>()
+  detailRows.forEach(r => {
+    if (!r.Dept || (r.Value ?? 0) < BIG_JOB_THRESHOLD) return
+    bigMap.set(r.Dept, (bigMap.get(r.Dept) ?? 0) + 1)
+  })
+
   const data = Array.from(map.entries())
-    .map(([dept, { actual, target }]) => ({ dept, actual, target, achPct: target>0 ? actual/target : 0 }))
+    .map(([dept, { actual, target }]) => ({ dept, actual, target, achPct: target>0 ? actual/target : 0, bigJobs: bigMap.get(dept) ?? 0 }))
     .sort((a,b) => b.actual - a.actual)
 
   if (!data.length) return (
@@ -56,8 +81,7 @@ export function DeptChart({ deptRows, chartDepts, onClickDept }: Props) {
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9"/>
           <XAxis type="number" tickFormatter={fmtK} tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false}/>
           <YAxis type="category" dataKey="dept" tick={{ fontSize: 10, fill: '#475569' }} width={60} axisLine={false} tickLine={false} cursor="pointer"/>
-          <Tooltip formatter={(v: number, name: string) => [fmtFull(v), name]}
-            contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}/>
+          <Tooltip content={<DeptTooltip/>} cursor={{ fill: 'rgba(148,163,184,0.08)' }}/>
           <Legend wrapperStyle={{ fontSize: 10 }} verticalAlign="bottom"/>
 
           <Bar dataKey="actual" name="Actual" maxBarSize={13} cursor="pointer" fill="#059669">

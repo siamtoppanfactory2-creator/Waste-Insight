@@ -13,6 +13,9 @@ function fmtDate(s: string | null) {
   return p.length >= 2 ? `${p[0]}-${p[1]}` : s
 }
 
+// แผนกที่ผลิตภายในโรงงาน — แสดงเฉพาะงานจากแผนกเหล่านี้
+const IN_HOUSE_DEPTS = new Set(['PR1','PR2','CON1','CON2','GL1','PDTN'])
+
 // unique key per row
 function rowKey(r: WasteRow): string {
   return `${r.JO}||${r.Date ?? ''}||${r.Problem ?? r.Cause ?? ''}`
@@ -39,6 +42,7 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
   const items: RowItem[] = useMemo(() =>
     rows
       .filter(r => (r.Value ?? 0) >= 5000)
+      .filter(r => r.Dept != null && IN_HOUSE_DEPTS.has(r.Dept))
       .sort((a, b) => (b.Value ?? 0) - (a.Value ?? 0))
       .map(r => ({
         key:     rowKey(r),

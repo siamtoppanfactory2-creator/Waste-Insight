@@ -52,6 +52,7 @@ export function AddpaperPage({ actioned, salesMap }: { actioned: UseActionedJobs
 
   const chartDetailForMonth = useMemo(() => f.filterForMonthly(detail.rows), [f.filterForMonthly, detail.rows])
   const chartDeptRows  = useMemo(() => f.filterForDept(dept.rows),   [f.filterForDept, dept.rows])
+  const chartDeptDetail = useMemo(() => f.filterForDept(detail.rows), [f.filterForDept, detail.rows])
   const chartJobRows     = useMemo(() => f.filterForJobs(detail.rows),     [f.filterForJobs, detail.rows])
   const chartProblemRows = useMemo(() => f.filterForProblems(detail.rows), [f.filterForProblems, detail.rows])
   const filteredDetail   = useMemo(() => f.filterRows(detail.rows),        [f.filterRows, detail.rows])
@@ -66,7 +67,7 @@ export function AddpaperPage({ actioned, salesMap }: { actioned: UseActionedJobs
     const achPct      = totalTarget > 0 ? (totalValue / totalTarget - 1) * 100 : null
     const totalJobs   = filteredDetail.length
     const coreJobs    = filteredDetail.filter(r => r.Dept && CORE_DEPTS.has(r.Dept)).length
-    const bigRows = filteredDetail.filter(r => (r.Value??0) >= 5000)
+    const bigRows = filteredDetail.filter(r => (r.Value??0) >= 5000 && r.Dept && CORE_DEPTS.has(r.Dept))
     const bigJobs = bigRows.length
     const bigVal  = bigRows.reduce((s,r) => s+(r.Value??0), 0)
     const yearFiltered = monthly.rows.filter(r => f.dd.years.length === 0 || f.dd.years.includes(r.CalendarYear))
@@ -164,7 +165,7 @@ export function AddpaperPage({ actioned, salesMap }: { actioned: UseActionedJobs
           <MonthlyChart monthlyRows={chartMonthlyRows} detailRows={chartDetailForMonth}
             ddMonth={f.dd.month} chartMonths={f.chartSel.months} onClickMonth={f.toggleChartMonth}
             salesMap={salesMap} dataset="Addpaper"/>
-          <DeptChart deptRows={chartDeptRows} chartDepts={f.chartSel.depts} onClickDept={f.toggleChartDept}/>
+          <DeptChart deptRows={chartDeptRows} detailRows={chartDeptDetail} chartDepts={f.chartSel.depts} onClickDept={f.toggleChartDept}/>
         </>)}
       </div>
 
