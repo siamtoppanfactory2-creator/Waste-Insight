@@ -54,4 +54,3 @@ export function useProductionJobs(): ProductionJobs {
 
   return { byMonth, loaded, sumFor }
 }
-
