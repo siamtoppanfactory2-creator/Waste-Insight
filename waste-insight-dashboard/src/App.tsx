@@ -7,6 +7,7 @@ import { useActionedJobs } from './hooks/useActionedJobs'
 import type { UseActionedJobsResult } from './hooks/useActionedJobs'
 import { useSalesData }   from './hooks/useSalesData'
 import type { SalesMap }  from './hooks/useSalesData'
+import { useProductionJobs } from './hooks/useProductionJobs'
 
 // ── Error Boundary ─────────────────────────────────────────────
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -45,6 +46,7 @@ export function App() {
   // ── shared state — โหลดครั้งเดียว ไม่ reset เมื่อ switch tab ──
   const actioned = useActionedJobs()
   const salesMap = useSalesData()
+  const prodJobs = useProductionJobs()
 
   return (
     <ErrorBoundary>
@@ -76,9 +78,9 @@ export function App() {
 
         <main className="max-w-screen-2xl mx-auto px-6 py-5">
           <ErrorBoundary>
-            {tab==='Replan'   && <ReplanPage   actioned={actioned} salesMap={salesMap}/>}
-            {tab==='Addpaper' && <AddpaperPage actioned={actioned} salesMap={salesMap}/>}
-            {tab==='Combined' && <CombinedPage salesMap={salesMap}/>}
+            {tab==='Replan'   && <ReplanPage   actioned={actioned} salesMap={salesMap} prodJobs={prodJobs}/>}
+            {tab==='Addpaper' && <AddpaperPage actioned={actioned} salesMap={salesMap} prodJobs={prodJobs}/>}
+            {tab==='Combined' && <CombinedPage salesMap={salesMap} prodJobs={prodJobs}/>}
           </ErrorBoundary>
         </main>
       </div>

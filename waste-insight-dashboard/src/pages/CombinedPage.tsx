@@ -6,6 +6,7 @@ import { KpiCard }      from '../components/KpiCard'
 import { FilterBar }    from '../components/FilterBar'
 import { CombinedMonthlyChart } from '../components/CombinedMonthlyChart'
 import type { SalesMap } from '../hooks/useSalesData'
+import type { ProductionJobs } from '../hooks/useProductionJobs'
 
 function Sk({ h='h-64' }: { h?: string }) { return <div className={`card ${h} animate-pulse bg-slate-100`}/> }
 function Err({ msg }: { msg: string }) { return <div className="card p-4 text-sm text-red-600 border-red-200 bg-red-50">⚠ {msg}</div> }
@@ -25,7 +26,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
   )
 }
 
-export function CombinedPage({ salesMap }: { salesMap: SalesMap }) {
+export function CombinedPage({ salesMap, prodJobs }: { salesMap: SalesMap; prodJobs: ProductionJobs }) {
   // โหลดข้อมูลทุกชนิดของทั้งสอง dataset
   const rpM = useWasteData('Replan',   'MONTHLY')
   const apM = useWasteData('Addpaper', 'MONTHLY')
@@ -107,12 +108,25 @@ export function CombinedPage({ salesMap }: { salesMap: SalesMap }) {
     })
     const wasteRate = totalSales > 0 ? (totalValue / totalSales * 100) : null
 
+    // job ผลิต = ค่าระดับโรงงาน (ค่าเดียวต่อเดือน) — ใช้เดือนชุดเดียวกับ sales
+    // เทียบเฉพาะเดือนที่กรอก job ผลิตไว้แล้ว เพื่อให้ตัวเศษ/ตัวหารเป็นช่วงเดียวกัน
+    const coveredKeys = new Set([...seen].filter(k => prodJobs.byMonth.has(k)))
+    const prodTotal   = prodJobs.sumFor(coveredKeys)
+    const inCovered   = (rows: typeof detailAll) => rows.filter(r =>
+      r.Dept && CORE_DEPTS.has(r.Dept) &&
+      coveredKeys.has(`${r.CalendarYear}-${String(r.MonthNo).padStart(2,'0')}`)).length
+    const coreCovered = inCovered(rpDetailF) + inCovered(apDetailF)
+    const prodPct     = prodTotal > 0 ? (coreCovered / prodTotal * 100) : null
+    const prodMonths  = coveredKeys.size
+    const prodPartial = coveredKeys.size < seen.size
+
     return {
       totalValue, totalTarget, achPct, totalJobs, coreJobs, bigJobs, bigVal, totalSales, wasteRate,
       replanWaste, addpaperWaste, replanJobs, addpaperJobs, replanBig, addpaperBig,
+      prodTotal, prodPct, prodMonths, prodPartial,
     }
   }, [f.filterRows, f.dd.depts, f.chartSel.depts, f.dateRangeActive,
-      rpM.rows, apM.rows, rpDp.rows, apDp.rows, rpDt.rows, apDt.rows, filteredDetail, salesMap])
+      rpM.rows, apM.rows, rpDp.rows, apDp.rows, rpDt.rows, apDt.rows, filteredDetail, salesMap, prodJobs])
 
   const anyLoading = rpM.loading || apM.loading || rpDp.loading || apDp.loading
   const anyError   = rpM.error ?? apM.error ?? rpDp.error ?? apDp.error ?? rpDt.error ?? apDt.error
@@ -176,6 +190,11 @@ export function CombinedPage({ salesMap }: { salesMap: SalesMap }) {
             breakdown={[
               { label: 'Replan',   value: kpi.replanJobs.toLocaleString(),   color: '#059669' },
               { label: 'Addpaper', value: kpi.addpaperJobs.toLocaleString(), color: '#10b981' },
+              ...(kpi.prodPct !== null ? [
+                { label: kpi.prodPartial ? `งานผลิตทั้งหมด (${kpi.prodMonths} เดือน)` : 'งานผลิตทั้งหมด',
+                  value: kpi.prodTotal.toLocaleString() },
+                { label: 'คิดเป็น', value: `${kpi.prodPct.toFixed(1)}%`, color: '#059669' },
+              ] : []),
             ]}/>
           <KpiCard label="Jobs > 5,000 THB" value={kpi.bigJobs.toLocaleString()}
             sub1={`มูลค่ารวม: ${fmtK(kpi.bigVal)}`} accent="red"

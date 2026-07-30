@@ -12,6 +12,7 @@ import { DetailTable }    from '../components/DetailTable'
 import { ActionList }     from '../components/ActionList'
 import type { UseActionedJobsResult } from '../hooks/useActionedJobs'
 import type { SalesMap } from '../hooks/useSalesData'
+import type { ProductionJobs } from '../hooks/useProductionJobs'
 
 function Sk({ h='h-64' }: { h?: string }) { return <div className={`card ${h} animate-pulse bg-slate-100`}/> }
 function Err({ msg }: { msg: string }) { return <div className="card p-4 text-sm text-red-600 border-red-200 bg-red-50">⚠ {msg}</div> }
@@ -36,7 +37,7 @@ function toSortable(s: string): string {
 }
 
 
-export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsResult; salesMap: SalesMap }) {
+export function ReplanPage({ actioned, salesMap, prodJobs }: { actioned: UseActionedJobsResult; salesMap: SalesMap; prodJobs: ProductionJobs }) {
   const monthly = useWasteData('Replan', 'MONTHLY')
   const dept    = useWasteData('Replan', 'DEPT')
   const detail  = useWasteData('Replan', 'DETAIL')
@@ -114,8 +115,21 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
     })
     const wasteRate = totalSales > 0 ? (totalValue / totalSales * 100) : null
 
-    return { totalValue, totalTarget, achPct, totalJobs, coreJobs, bigJobs, bigVal, vsPrevPct, totalSales, wasteRate }
-  }, [f.filterRows, f.dd, f.chartSel.depts, monthly.rows, dept.rows, filteredDetail, salesMap])
+    // ── job ผลิต + % ──
+    // เทียบเฉพาะเดือนที่กรอก job ผลิตไว้แล้ว เพื่อให้ตัวเศษ/ตัวหารเป็นช่วงเดียวกัน
+    const monthKeys   = new Set(kpiRows.map(r => `${r.CalendarYear}-${String(r.MonthNo).padStart(2,'0')}`))
+    const coveredKeys = new Set([...monthKeys].filter(k => prodJobs.byMonth.has(k)))
+    const prodTotal   = prodJobs.sumFor(coveredKeys)
+    const coreCovered = filteredDetail.filter(r =>
+      r.Dept && CORE_DEPTS.has(r.Dept) &&
+      coveredKeys.has(`${r.CalendarYear}-${String(r.MonthNo).padStart(2,'0')}`)).length
+    const prodPct     = prodTotal > 0 ? (coreCovered / prodTotal * 100) : null
+    const prodMonths  = coveredKeys.size
+    const prodPartial = coveredKeys.size < monthKeys.size
+
+    return { totalValue, totalTarget, achPct, totalJobs, coreJobs, bigJobs, bigVal, vsPrevPct, totalSales, wasteRate,
+             prodTotal, prodPct, prodMonths, prodPartial }
+  }, [f.filterRows, f.dd, f.chartSel.depts, monthly.rows, dept.rows, filteredDetail, salesMap, prodJobs])
 
   const anyLoading = monthly.loading || dept.loading
   const anyError   = monthly.error ?? dept.error ?? detail.error
@@ -186,7 +200,12 @@ export function ReplanPage({ actioned, salesMap }: { actioned: UseActionedJobsRe
           <KpiCard label="Total Jobs" value={kpi.coreJobs.toLocaleString()}
             valueSub="Prod. only"
             sub1={`รวม ${kpi.totalJobs.toLocaleString()} รายการ (incl. OUTWORK ฯลฯ)`}
-            accent="green"/>
+            accent="green"
+            breakdown={kpi.prodPct !== null ? [
+              { label: kpi.prodPartial ? `งานผลิตทั้งหมด (${kpi.prodMonths} เดือน)` : 'งานผลิตทั้งหมด',
+                value: kpi.prodTotal.toLocaleString() },
+              { label: 'คิดเป็น', value: `${kpi.prodPct.toFixed(1)}%`, color: '#059669' },
+            ] : undefined}/>
           <KpiCard label="Jobs > 5,000 THB" value={kpi.bigJobs.toLocaleString()}
             sub1={`มูลค่ารวม: ${fmtK(kpi.bigVal)}`} accent="red"/>
         </>)}
