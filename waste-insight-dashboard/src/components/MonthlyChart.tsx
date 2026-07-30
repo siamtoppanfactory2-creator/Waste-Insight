@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import type { WasteRow } from '../types'
 import type { SalesMap } from '../hooks/useSalesData'
+import type { ProductionJobsMap } from '../hooks/useProductionJobs'
 import type { Dataset } from '../types'
 
 function fmtK(v: number) {
@@ -13,6 +14,13 @@ function fmtK(v: number) {
   return String(v)
 }
 function fmtFull(v: number) { return v.toLocaleString(undefined, {maximumFractionDigits:0}) }
+
+// ปัดเพดานแกนขึ้นเป็นเลขกลม เพื่อให้ tick เป็นจำนวนเต็มสวย ๆ
+function niceMax(v: number): number {
+  if (v <= 0) return 1
+  const step = Math.pow(10, Math.floor(Math.log10(v))) / 2
+  return Math.ceil(v / step) * step
+}
 
 function barFill(achPct: number, gray: boolean): string {
   if (gray) return '#e2e8f0'
@@ -29,7 +37,7 @@ const BarLabel = ({ x=0, y=0, width=0, value=0, gray }: { x?: number; y?: number
 }
 
 // Custom legend
-function ChartLegend({ hasSales }: { hasSales: boolean }) {
+function ChartLegend({ hasSales, hasProd }: { hasSales: boolean; hasProd: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
       <span className="flex items-center gap-1.5">
@@ -48,6 +56,13 @@ function ChartLegend({ hasSales }: { hasSales: boolean }) {
         <span className="text-violet-600 font-medium">Jobs</span>
         <span className="text-slate-400 text-[10px]">(→)</span>
       </span>
+      {hasProd && (
+        <span className="flex items-center gap-1.5">
+          <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#0891b2" strokeWidth="2"/></svg>
+          <span className="text-cyan-700 font-medium">งานผลิตทั้งหมด</span>
+          <span className="text-slate-400 text-[10px]">(→)</span>
+        </span>
+      )}
       {hasSales && (
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-emerald-200 border border-emerald-400 inline-block"/>
@@ -73,6 +88,7 @@ function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
   const prevEntry    = payload.find(p => p.name === 'prevAvg')
   const salesEntry   = payload.find(p => p.name === 'sales')
   const countEntry   = payload.find(p => p.name === 'count')
+  const prodEntry    = payload.find(p => p.name === 'prodTotal')
   const actual  = actualEntry?.value ?? 0
   const sales   = salesEntry?.value  ?? 0
   const wasteRate = (sales > 0 && actual > 0) ? (actual / sales * 100) : null
@@ -84,6 +100,13 @@ function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
       {targetEntry  && <p style={{ color:'#2563eb', margin:'2px 0' }}>Target: {fmtFull(targetEntry.value)}</p>}
       {prevEntry    && <p style={{ color:'#a78bfa', margin:'2px 0' }}>Prev Avg: {fmtFull(prevEntry.value)}</p>}
       {countEntry   && <p style={{ color:'#7c3aed', margin:'2px 0' }}>Jobs: {fmtFull(countEntry.value)}</p>}
+      {prodEntry && prodEntry.value > 0 && (
+        <p style={{ color:'#0891b2', margin:'2px 0' }}>
+          งานผลิตทั้งหมด: {fmtFull(prodEntry.value)}
+          {countEntry && countEntry.value > 0 &&
+            <span style={{ color:'#64748b' }}> · {(countEntry.value / prodEntry.value * 100).toFixed(1)}%</span>}
+        </p>
+      )}
       {salesEntry && sales > 0 && (
         <>
           <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
@@ -107,9 +130,10 @@ interface Props {
   onClickMonth: (v: number, shift: boolean) => void
   salesMap?:    SalesMap
   dataset?:     Dataset
+  prodJobsMap?: ProductionJobsMap   // จำนวน job ผลิตต่อเดือน (Config_ProductionJobs)
 }
 
-export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, onClickMonth, salesMap, dataset }: Props) {
+export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, onClickMonth, salesMap, dataset, prodJobsMap }: Props) {
   const map = new Map<string, { label: string; monthNo: number; actual: number; target: number; prevAvg: number; achPct: number; count: number; sales: number }>()
 
   monthlyRows.forEach(r => {
@@ -135,7 +159,9 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
       const s = salesMap.get(key)
       v.sales = dataset === 'Replan' ? (s?.replan ?? 0) : (s?.addpaper ?? 0)
     }
-    return { ...v, key }
+    // เดือนที่ยังไม่กรอก job ผลิต = null → เส้นเว้นช่อง ไม่ลากลงศูนย์
+    const prodTotal = prodJobsMap?.get(key)?.total ?? null
+    return { ...v, key, prodTotal }
   })
 
   if (!data.length) return <div className="card p-4 min-h-[300px] flex items-center justify-center text-slate-400 text-sm">No data</div>
@@ -150,13 +176,18 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
 
   const maxCount = Math.max(...data.map(d => d.count), 1)
   const hasSales = data.some(d => d.sales > 0)
+  const maxProd  = Math.max(...data.map(d => d.prodTotal ?? 0), 0)
+  const hasProd  = maxProd > 0
+  // แกนขวาต้องครอบทั้งเส้น Jobs และเส้นงานผลิต (อยู่แกนเดียวกันเพื่อเทียบสัดส่วนได้)
+  // ปัดขึ้นเป็นเลขกลม ๆ ไม่ให้ tick ออกมาเป็นทศนิยม
+  const rightMax = niceMax(Math.max(maxCount * 4, maxProd * 1.15))
 
   return (
     <div className="card p-4 min-h-[300px]">
       <div className="flex items-start justify-between mb-2">
         <h3 className="card-title">Monthly Waste Trend</h3>
       </div>
-      <ChartLegend hasSales={hasSales}/>
+      <ChartLegend hasSales={hasSales} hasProd={hasProd}/>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 18, right: 48, bottom: 44, left: 8 }} style={{ cursor: 'pointer' }}
           onClick={(d, e) => {
@@ -171,7 +202,7 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
           <YAxis yAxisId="v" tickFormatter={fmtK} tick={{ fontSize: 9, fill: '#94a3b8' }} width={40} axisLine={false} tickLine={false}/>
 
           {/* Right: job count */}
-          <YAxis yAxisId="c" orientation="right" domain={[0, maxCount * 4]} tickFormatter={v=>String(v)}
+          <YAxis yAxisId="c" orientation="right" domain={[0, rightMax]} tickFormatter={v=>String(v)}
             tick={{ fontSize: 9, fill: '#7c3aed' }} width={32} axisLine={false} tickLine={false}/>
 
           {/* Hidden sales axis — domain=[0,1] ทำให้ sales ล้น chart height = flood effect */}
@@ -218,6 +249,25 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
             }}
             activeDot={{ r: 5, fill: '#7c3aed' }}
           />
+
+          {/* เส้นจำนวนงานผลิตทั้งหมด — แกนเดียวกับ Jobs เพื่อเทียบสัดส่วน */}
+          {hasProd && (
+            <Line yAxisId="c" dataKey="prodTotal" name="prodTotal" type="monotone"
+              stroke="#0891b2" strokeWidth={2} connectNulls={false}
+              legendType="none" isAnimationActive={false}
+              dot={(props: { cx?: number; cy?: number; value?: number | number[] }) => {
+                const { cx=0, cy=0, value } = props
+                const v = Array.isArray(value) ? Number(value[1]) : Number(value ?? 0)
+                if (!v || v <= 0) return <g key={`pd-${cx}`}/>
+                return (
+                  <g key={`pd-${cx}`}>
+                    <circle cx={cx} cy={cy} r={3.5} fill="#0891b2" stroke="#fff" strokeWidth={1.5}/>
+                    <text x={cx} y={cy-9} textAnchor="middle" fill="#0891b2" fontSize={9} fontWeight="600">{fmtFull(v)}</text>
+                  </g>
+                )
+              }}
+              activeDot={{ r: 5, fill: '#0891b2' }}/>
+          )}
         </ComposedChart>
       </ResponsiveContainer>
       {hasMonthSel && <p className="text-xs text-slate-400 mt-1 text-center">Shift+click เพื่อเลือกเพิ่ม · คลิกซ้ำเพื่อยกเลิก</p>}

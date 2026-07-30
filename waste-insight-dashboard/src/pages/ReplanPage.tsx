@@ -219,7 +219,7 @@ export function ReplanPage({ actioned, salesMap, prodJobs }: { actioned: UseActi
             monthlyRows={chartMonthlyRows} detailRows={chartDetailForMonth}
             ddMonth={f.dd.month} chartMonths={f.chartSel.months}
             onClickMonth={f.toggleChartMonth}
-            salesMap={salesMap} dataset="Replan"
+            salesMap={salesMap} dataset="Replan" prodJobsMap={prodJobs.byMonth}
           />
           <DeptChart deptRows={chartDeptRows} detailRows={chartDeptDetail} chartDepts={f.chartSel.depts} onClickDept={f.toggleChartDept}/>
         </>)}

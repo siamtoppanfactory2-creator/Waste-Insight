@@ -46,6 +46,7 @@ export function CombinedPage({ salesMap, prodJobs }: { salesMap: SalesMap; prodJ
   // ── กราฟรายเดือน: กรองปี/dept แล้วส่งแยกแต่ละ dataset ──
   const chartReplan   = useMemo(() => f.filterForMonthly(rpM.rows), [f.filterForMonthly, rpM.rows])
   const chartAddpaper = useMemo(() => f.filterForMonthly(apM.rows), [f.filterForMonthly, apM.rows])
+  const chartDetailForMonth = useMemo(() => f.filterForMonthly(detailAll), [f.filterForMonthly, detailAll])
 
   const filteredDetail = useMemo(() => f.filterRows(detailAll), [f.filterRows, detailAll])
 
@@ -211,7 +212,8 @@ export function CombinedPage({ salesMap, prodJobs }: { salesMap: SalesMap; prodJ
         {anyLoading ? <Sk h="h-[320px]"/> : (
           <CombinedMonthlyChart replanRows={chartReplan} addpaperRows={chartAddpaper}
             ddMonth={f.dd.month} chartMonths={f.chartSel.months} onClickMonth={f.toggleChartMonth}
-            salesMap={salesMap} prevYearMap={prevYearMap}/>
+            salesMap={salesMap} prevYearMap={prevYearMap}
+            detailRows={chartDetailForMonth} prodJobsMap={prodJobs.byMonth}/>
         )}
       </div>
     </div>

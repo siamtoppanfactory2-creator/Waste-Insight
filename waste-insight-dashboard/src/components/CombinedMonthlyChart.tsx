@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import type { WasteRow } from '../types'
 import type { SalesMap } from '../hooks/useSalesData'
+import type { ProductionJobsMap } from '../hooks/useProductionJobs'
 
 const COLOR_SALES = '#22c55e'  // พื้นหลัง sales (context)
 
@@ -19,6 +20,8 @@ const RED_REPLAN     = '#dc2626'  // แดงเข้ม
 const RED_ADDPAPER   = '#f87171'  // แดงอ่อน
 const COLOR_TARGET   = '#2563eb'  // น้ำเงิน — เส้น target รวม
 const COLOR_PREVYR   = '#64748b'  // เทา — จุดยอดรวมเดือนเดียวกันปีก่อน
+const COLOR_JOBS     = '#7c3aed'  // ม่วง — จำนวนงานที่เกิด waste (แกนขวา)
+const COLOR_PROD     = '#0891b2'  // ฟ้าอมเขียว — จำนวนงานผลิตทั้งหมด (แกนขวา)
 
 // legend swatch (ค่ากลาง ๆ ของโทนเขียว)
 const COLOR_REPLAN   = GREEN_REPLAN
@@ -38,6 +41,13 @@ function fmtK(v: number) {
 }
 function fmtFull(v: number) { return v.toLocaleString(undefined, {maximumFractionDigits:0}) }
 
+// ปัดเพดานแกนขึ้นเป็นเลขกลม เพื่อให้ tick เป็นจำนวนเต็มสวย ๆ
+function niceMax(v: number): number {
+  if (v <= 0) return 1
+  const step = Math.pow(10, Math.floor(Math.log10(v))) / 2
+  return Math.ceil(v / step) * step
+}
+
 type LabelProps = { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: number | string }
 const num = (v: number | string | undefined) => (typeof v === 'number' ? v : Number(v ?? 0))
 
@@ -55,7 +65,7 @@ const TotalLabel = (p: LabelProps) => {
   return <text x={x+width/2} y={y-4} textAnchor="middle" fill="#334155" fontSize={9} fontWeight={700}>{fmtK(value)}</text>
 }
 
-function ChartLegend({ hasSales, hasPrevYr }: { hasSales: boolean; hasPrevYr: boolean }) {
+function ChartLegend({ hasSales, hasPrevYr, hasProd }: { hasSales: boolean; hasPrevYr: boolean; hasProd: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
       <span className="flex items-center gap-1.5">
@@ -81,6 +91,18 @@ function ChartLegend({ hasSales, hasPrevYr }: { hasSales: boolean; hasPrevYr: bo
           ปีก่อน (เดือนเดียวกัน)
         </span>
       )}
+      <span className="flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded-full inline-block" style={{ background: COLOR_JOBS }}/>
+        <span style={{ color: COLOR_JOBS }} className="font-medium">Jobs</span>
+        <span className="text-slate-400 text-[10px]">(→)</span>
+      </span>
+      {hasProd && (
+        <span className="flex items-center gap-1.5">
+          <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke={COLOR_PROD} strokeWidth="2"/></svg>
+          <span style={{ color: COLOR_PROD }} className="font-medium">งานผลิตทั้งหมด</span>
+          <span className="text-slate-400 text-[10px]">(→)</span>
+        </span>
+      )}
       {hasSales && (
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-emerald-200 border border-emerald-400 inline-block"/>
@@ -99,6 +121,8 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
   const target = payload.find(p => p.name === 'target')?.value         ?? 0
   const sales  = payload.find(p => p.name === 'sales')?.value          ?? 0
   const prevYr = payload.find(p => p.name === 'prevYear')?.value       ?? 0
+  const count  = payload.find(p => p.name === 'count')?.value          ?? 0
+  const prod   = payload.find(p => p.name === 'prodTotal')?.value      ?? 0
   const total  = rp + ap
   const wasteRate = (sales > 0 && total > 0) ? (total / sales * 100) : null
   const yoy = (prevYr > 0 && total > 0) ? (total - prevYr) / prevYr * 100 : null
@@ -110,6 +134,18 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
       <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
       <p style={{ color:'#0f172a', margin:'2px 0', fontWeight:700 }}>Total: {fmtFull(total)}</p>
       {target > 0 && <p style={{ color: COLOR_TARGET, margin:'2px 0' }}>Target: {fmtFull(target)}</p>}
+      {(count > 0 || prod > 0) && (
+        <>
+          <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
+          {count > 0 && <p style={{ color: COLOR_JOBS, margin:'2px 0' }}>Jobs: {fmtFull(count)}</p>}
+          {prod > 0 && (
+            <p style={{ color: COLOR_PROD, margin:'2px 0' }}>
+              งานผลิตทั้งหมด: {fmtFull(prod)}
+              {count > 0 && <span style={{ color:'#64748b' }}> · {(count / prod * 100).toFixed(1)}%</span>}
+            </p>
+          )}
+        </>
+      )}
       {prevYr > 0 && (
         <>
           <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
@@ -144,12 +180,21 @@ interface Props {
   onClickMonth: (v: number, shift: boolean) => void
   salesMap?:    SalesMap
   prevYearMap?: Map<string, number>  // key `${year}-${monthNo}` → ยอดรวม Actual (ทุกปี)
+  detailRows?:  WasteRow[]           // DETAIL รวมสองชุด — ใช้นับจำนวนงานต่อเดือน
+  prodJobsMap?: ProductionJobsMap    // จำนวน job ผลิตต่อเดือน (Config_ProductionJobs)
 }
 
 interface Row { key: string; label: string; year: number; monthNo: number; replanActual: number; addpaperActual: number; target: number; total: number; sales: number }
 
-export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartMonths, onClickMonth, salesMap, prevYearMap }: Props) {
+export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartMonths, onClickMonth, salesMap, prevYearMap, detailRows, prodJobsMap }: Props) {
   const map = new Map<string, Row>()
+
+  // จำนวนงานที่เกิด waste ต่อเดือน (รวมสองชุด)
+  const cntMap = new Map<string, number>()
+  ;(detailRows ?? []).forEach(r => {
+    const key = `${r.CalendarYear}-${String(r.MonthNo).padStart(2,'0')}`
+    cntMap.set(key, (cntMap.get(key) ?? 0) + 1)
+  })
 
   const add = (rows: WasteRow[], field: 'replanActual' | 'addpaperActual') => {
     rows.forEach(r => {
@@ -170,13 +215,20 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
       const sales = s ? s.replan + s.addpaper : 0  // sales รวมของทั้งสอง dataset
       const pv = prevYearMap?.get(`${v.year - 1}-${v.monthNo}`)  // เดือนเดียวกันปีก่อน
       const prevYear = pv && pv > 0 ? pv : null
-      return { ...v, total: v.replanActual + v.addpaperActual, sales, prevYear }
+      // เดือนที่ยังไม่กรอก job ผลิต = null → เส้นเว้นช่อง ไม่ลากลงศูนย์
+      const prodTotal = prodJobsMap?.get(v.key)?.total ?? null
+      return { ...v, total: v.replanActual + v.addpaperActual, sales, prevYear, count: cntMap.get(v.key) ?? 0, prodTotal }
     })
 
   if (!data.length) return <div className="card p-4 min-h-[300px] flex items-center justify-center text-slate-400 text-sm">No data</div>
 
   const hasSales   = data.some(d => d.sales > 0)
   const hasPrevYr  = data.some(d => d.prevYear !== null)
+  const maxCount   = Math.max(...data.map(d => d.count), 1)
+  const maxProd    = Math.max(...data.map(d => d.prodTotal ?? 0), 0)
+  const hasProd    = maxProd > 0
+  // แกนขวาครอบทั้งเส้น Jobs และเส้นงานผลิต (แกนเดียวกันเพื่อเทียบสัดส่วนได้)
+  const rightMax   = niceMax(Math.max(maxCount * 4, maxProd * 1.15))
 
   const hasMonthSel = ddMonth !== null || chartMonths.length > 0
   const isGray = (monthNo: number) => {
@@ -191,7 +243,7 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
       <div className="flex items-start justify-between mb-2">
         <h3 className="card-title">Monthly Waste Trend — Combined (Replan + Addpaper)</h3>
       </div>
-      <ChartLegend hasSales={hasSales} hasPrevYr={hasPrevYr}/>
+      <ChartLegend hasSales={hasSales} hasPrevYr={hasPrevYr} hasProd={hasProd}/>
       <ResponsiveContainer width="100%" height={280}>
         <ComposedChart data={data} margin={{ top: 20, right: 24, bottom: 44, left: 8 }} style={{ cursor: 'pointer' }}
           onClick={(d, e) => {
@@ -202,6 +254,10 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false}/>
           <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#94a3b8' }} angle={-40} textAnchor="end" interval={0} axisLine={false} tickLine={false}/>
           <YAxis tickFormatter={fmtK} tick={{ fontSize: 9, fill: '#94a3b8' }} width={40} axisLine={false} tickLine={false}/>
+
+          {/* ขวา: จำนวนงาน (Jobs + งานผลิตทั้งหมด) */}
+          <YAxis yAxisId="c" orientation="right" domain={[0, rightMax]} tickFormatter={v=>String(v)}
+            tick={{ fontSize: 9, fill: COLOR_JOBS }} width={34} axisLine={false} tickLine={false}/>
 
           {/* Hidden sales axis — domain=[0,1] ให้ sales flood เป็นพื้นหลัง (เหมือนหน้า Replan/Addpaper) */}
           {hasSales && <YAxis yAxisId="s" hide domain={[0, 1]}/>}
@@ -245,6 +301,42 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
               type="monotone" legendType="none" connectNulls={false} animationDuration={500}
               dot={{ r: 3.5, fill: COLOR_PREVYR, stroke: '#fff', strokeWidth: 1 }}
               activeDot={{ r: 5, fill: COLOR_PREVYR, stroke: '#fff', strokeWidth: 1 }}/>
+          )}
+
+          {/* แกนขวา: จำนวนงานที่เกิด waste */}
+          <Area yAxisId="c" dataKey="count" name="count" type="monotone"
+            fill={COLOR_JOBS} stroke={COLOR_JOBS} fillOpacity={0.12} strokeWidth={1.5}
+            legendType="none" isAnimationActive={false}
+            dot={(props: { cx?: number; cy?: number; value?: number | number[] }) => {
+              const { cx=0, cy=0, value } = props
+              const v = Array.isArray(value) ? Number(value[1]) : Number(value ?? 0)
+              if (!v || v <= 0) return <g key={`jd-${cx}`}/>
+              return (
+                <g key={`jd-${cx}`}>
+                  <circle cx={cx} cy={cy} r={3} fill={COLOR_JOBS} stroke="#fff" strokeWidth={1.5}/>
+                  <text x={cx} y={cy-9} textAnchor="middle" fill={COLOR_JOBS} fontSize={8} fontWeight="600">{v}</text>
+                </g>
+              )
+            }}
+            activeDot={{ r: 5, fill: COLOR_JOBS }}/>
+
+          {/* แกนขวา: จำนวนงานผลิตทั้งหมด */}
+          {hasProd && (
+            <Line yAxisId="c" dataKey="prodTotal" name="prodTotal" type="monotone"
+              stroke={COLOR_PROD} strokeWidth={2} connectNulls={false}
+              legendType="none" isAnimationActive={false}
+              dot={(props: { cx?: number; cy?: number; value?: number | number[] }) => {
+                const { cx=0, cy=0, value } = props
+                const v = Array.isArray(value) ? Number(value[1]) : Number(value ?? 0)
+                if (!v || v <= 0) return <g key={`pd-${cx}`}/>
+                return (
+                  <g key={`pd-${cx}`}>
+                    <circle cx={cx} cy={cy} r={3.5} fill={COLOR_PROD} stroke="#fff" strokeWidth={1.5}/>
+                    <text x={cx} y={cy-9} textAnchor="middle" fill={COLOR_PROD} fontSize={9} fontWeight="600">{fmtFull(v)}</text>
+                  </g>
+                )
+              }}
+              activeDot={{ r: 5, fill: COLOR_PROD }}/>
           )}
         </ComposedChart>
       </ResponsiveContainer>

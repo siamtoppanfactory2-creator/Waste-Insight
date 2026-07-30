@@ -181,7 +181,7 @@ export function AddpaperPage({ actioned, salesMap, prodJobs }: { actioned: UseAc
         {anyLoading ? <><Sk h="h-[300px]"/><Sk h="h-[300px]"/></> : (<>
           <MonthlyChart monthlyRows={chartMonthlyRows} detailRows={chartDetailForMonth}
             ddMonth={f.dd.month} chartMonths={f.chartSel.months} onClickMonth={f.toggleChartMonth}
-            salesMap={salesMap} dataset="Addpaper"/>
+            salesMap={salesMap} dataset="Addpaper" prodJobsMap={prodJobs.byMonth}/>
           <DeptChart deptRows={chartDeptRows} detailRows={chartDeptDetail} chartDepts={f.chartSel.depts} onClickDept={f.toggleChartDept}/>
         </>)}
       </div>
