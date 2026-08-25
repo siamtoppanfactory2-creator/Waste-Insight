@@ -12,25 +12,24 @@ const COLOR_SALES = '#22c55e'  // พื้นหลัง sales (context)
 const GRAY_REPLAN   = '#cbd5e1'
 const GRAY_ADDPAPER = '#e2e8f0'
 
-// สี segment ต่อ dataset — Replan = เฉดเข้ม (บน), Addpaper = เฉดอ่อน (ล่าง)
-// ไม่เกิน target → โทนเขียว, เกิน target → โทนแดง
-const GREEN_REPLAN   = '#059669'  // เขียวเข้ม
-const GREEN_ADDPAPER = '#10b981'  // เขียวอ่อน
-const RED_REPLAN     = '#dc2626'  // แดงเข้ม
-const RED_ADDPAPER   = '#f87171'  // แดงอ่อน
+// สเกลสีตาม % ของ target — ชุดเดียวกับ barFill ในหน้า Replan/Addpaper (MonthlyChart)
+// แต่ละ segment คิดสีจาก target ของชุดตัวเอง สีจึงตรงกับที่เห็นในหน้านั้น ๆ
+const ACH_SCALE: { max: number; color: string; label: string }[] = [
+  { max: 0.75,     color: '#059669', label: '≤75%'  },
+  { max: 0.90,     color: '#10b981', label: '≤90%'  },
+  { max: 1.00,     color: '#f59e0b', label: '≤100%' },
+  { max: 1.10,     color: '#f97316', label: '≤110%' },
+  { max: Infinity, color: '#ef4444', label: '>110%' },
+]
 const COLOR_TARGET   = '#2563eb'  // น้ำเงิน — เส้น target รวม
 const COLOR_PREVYR   = '#64748b'  // เทา — จุดยอดรวมเดือนเดียวกันปีก่อน
 const COLOR_JOBS     = '#7c3aed'  // ม่วง — จำนวนงานที่เกิด waste (แกนขวา)
 const COLOR_PROD     = '#0891b2'  // ฟ้าอมเขียว — จำนวนงานผลิตทั้งหมด (แกนขวา)
 
-// legend swatch (ค่ากลาง ๆ ของโทนเขียว)
-const COLOR_REPLAN   = GREEN_REPLAN
-const COLOR_ADDPAPER = GREEN_ADDPAPER
-
-// เลือกสีตามสถานะเกิน target + เฉดตาม dataset
-function segFill(over: boolean, isReplan: boolean): string {
-  if (over) return isReplan ? RED_REPLAN : RED_ADDPAPER
-  return isReplan ? GREEN_REPLAN : GREEN_ADDPAPER
+// เลือกสีตาม % ของ target (เหมือน barFill ใน MonthlyChart ทุกประการ)
+function segFill(achPct: number): string {
+  const step = ACH_SCALE.find(s => achPct <= s.max) ?? ACH_SCALE[ACH_SCALE.length - 1]
+  return step.color
 }
 
 function fmtK(v: number) {
@@ -69,21 +68,23 @@ function ChartLegend({ hasSales, hasPrevYr, hasProd }: { hasSales: boolean; hasP
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
       <span className="flex items-center gap-1.5">
-        <span className="w-3 h-3 rounded-sm inline-block" style={{ background: COLOR_REPLAN }}/>Replan
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="w-3 h-3 rounded-sm inline-block" style={{ background: COLOR_ADDPAPER }}/>Addpaper
+        <svg width="12" height="14" aria-hidden="true">
+          <rect x="0" y="0" width="12" height="6" rx="1" fill="#94a3b8"/>
+          <rect x="0" y="7" width="12" height="6" rx="1" fill="#e2e8f0"/>
+        </svg>
+        แท่งบน = Replan · ล่าง = Addpaper
       </span>
       <span className="flex items-center gap-1.5">
         <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke={COLOR_TARGET} strokeWidth="2" strokeDasharray="5 3"/></svg>
         Target (total)
       </span>
       <span className="flex items-center gap-1.5 text-slate-400">·</span>
-      <span className="flex items-center gap-1.5">
-        <span className="w-3 h-3 rounded-sm inline-block" style={{ background: GREEN_REPLAN }}/>ไม่เกิน target
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="w-3 h-3 rounded-sm inline-block" style={{ background: RED_REPLAN }}/>เกิน target
+      <span className="flex items-center gap-1">
+        <span className="text-slate-400 mr-0.5">vs target</span>
+        {ACH_SCALE.map(s => (
+          <span key={s.label} className="w-3 h-3 rounded-sm inline-block" style={{ background: s.color }} title={s.label}/>
+        ))}
+        <span className="text-slate-400 text-[10px] ml-0.5">ต่ำ → เกิน</span>
       </span>
       {hasPrevYr && (
         <span className="flex items-center gap-1.5">
@@ -113,7 +114,7 @@ function ChartLegend({ hasSales, hasPrevYr, hasProd }: { hasSales: boolean; hasP
   )
 }
 
-interface TooltipEntry { name: string; value: number }
+interface TooltipEntry { name: string; value: number; payload?: { replanTarget?: number; addpaperTarget?: number } }
 function CustomTooltip({ active, label, payload }: { active?: boolean; label?: string; payload?: TooltipEntry[] }) {
   if (!active || !payload?.length) return null
   const rp     = payload.find(p => p.name === 'replanActual')?.value   ?? 0
@@ -123,14 +124,17 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
   const prevYr = payload.find(p => p.name === 'prevYear')?.value       ?? 0
   const count  = payload.find(p => p.name === 'count')?.value          ?? 0
   const prod   = payload.find(p => p.name === 'prodTotal')?.value      ?? 0
+  const row      = payload[0]?.payload ?? {}
+  const rpTarget = row.replanTarget   ?? 0
+  const apTarget = row.addpaperTarget ?? 0
   const total  = rp + ap
   const wasteRate = (sales > 0 && total > 0) ? (total / sales * 100) : null
   const yoy = (prevYr > 0 && total > 0) ? (total - prevYr) / prevYr * 100 : null
   return (
     <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'10px 14px', fontSize:11, boxShadow:'0 4px 16px rgba(0,0,0,0.1)', minWidth:180 }}>
       <p style={{ fontWeight:700, marginBottom:6, color:'#0f172a' }}>{label}</p>
-      <p style={{ color: COLOR_REPLAN,   margin:'2px 0' }}>Replan: {fmtFull(rp)}</p>
-      <p style={{ color: COLOR_ADDPAPER, margin:'2px 0' }}>Addpaper: {fmtFull(ap)}</p>
+      <p style={{ color: segFill(rpTarget > 0 ? rp / rpTarget : 0), margin:'2px 0' }}>Replan: {fmtFull(rp)}</p>
+      <p style={{ color: segFill(apTarget > 0 ? ap / apTarget : 0), margin:'2px 0' }}>Addpaper: {fmtFull(ap)}</p>
       <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
       <p style={{ color:'#0f172a', margin:'2px 0', fontWeight:700 }}>Total: {fmtFull(total)}</p>
       {target > 0 && <p style={{ color: COLOR_TARGET, margin:'2px 0' }}>Target: {fmtFull(target)}</p>}
@@ -184,7 +188,7 @@ interface Props {
   prodJobsMap?: ProductionJobsMap    // จำนวน job ผลิตต่อเดือน (Config_ProductionJobs)
 }
 
-interface Row { key: string; label: string; year: number; monthNo: number; replanActual: number; addpaperActual: number; target: number; total: number; sales: number }
+interface Row { key: string; label: string; year: number; monthNo: number; replanActual: number; addpaperActual: number; replanTarget: number; addpaperTarget: number; target: number; total: number; sales: number }
 
 export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartMonths, onClickMonth, salesMap, prevYearMap, detailRows, prodJobsMap }: Props) {
   const map = new Map<string, Row>()
@@ -196,17 +200,18 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
     cntMap.set(key, (cntMap.get(key) ?? 0) + 1)
   })
 
-  const add = (rows: WasteRow[], field: 'replanActual' | 'addpaperActual') => {
+  const add = (rows: WasteRow[], field: 'replanActual' | 'addpaperActual', tField: 'replanTarget' | 'addpaperTarget') => {
     rows.forEach(r => {
       const key = `${r.CalendarYear}-${String(r.MonthNo).padStart(2,'0')}`
-      if (!map.has(key)) map.set(key, { key, label:`${r.MonthName} ${r.CalendarYear}`, year: r.CalendarYear, monthNo: r.MonthNo, replanActual:0, addpaperActual:0, target:0, total:0, sales:0 })
+      if (!map.has(key)) map.set(key, { key, label:`${r.MonthName} ${r.CalendarYear}`, year: r.CalendarYear, monthNo: r.MonthNo, replanActual:0, addpaperActual:0, replanTarget:0, addpaperTarget:0, target:0, total:0, sales:0 })
       const e = map.get(key)!
-      e[field] += r.Actual ?? 0
-      e.target += r.Target ?? 0  // target รวมของทั้งสอง dataset
+      e[field]  += r.Actual ?? 0
+      e[tField] += r.Target ?? 0  // target แยกรายชุด — ใช้คิดสีของ segment นั้น
+      e.target  += r.Target ?? 0  // target รวมของทั้งสอง dataset — ใช้กับเส้น Target
     })
   }
-  add(replanRows,   'replanActual')
-  add(addpaperRows, 'addpaperActual')
+  add(replanRows,   'replanActual',   'replanTarget')
+  add(addpaperRows, 'addpaperActual', 'addpaperTarget')
 
   const data = Array.from(map.values())
     .sort((a,b) => a.key.localeCompare(b.key))
@@ -275,8 +280,9 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <Bar dataKey="addpaperActual" name="addpaperActual" stackId="w" maxBarSize={40} cursor="pointer"
             animationDuration={500} animationEasing="ease-out">
             {data.map((e,i) => {
-              const over = e.target > 0 && e.total > e.target
-              return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_ADDPAPER : segFill(over, false)} style={{ transition: 'fill 0.2s ease' }}/>
+              const achPct = e.addpaperTarget > 0 ? e.addpaperActual / e.addpaperTarget : 0
+              return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_ADDPAPER : segFill(achPct)}
+                stroke="#fff" strokeWidth={1} style={{ transition: 'fill 0.2s ease' }}/>
             })}
             <LabelList dataKey="addpaperActual" content={SegLabel}/>
           </Bar>
@@ -284,8 +290,9 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <Bar dataKey="replanActual" name="replanActual" stackId="w" maxBarSize={40} cursor="pointer"
             animationDuration={500} animationEasing="ease-out">
             {data.map((e,i) => {
-              const over = e.target > 0 && e.total > e.target
-              return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_REPLAN : segFill(over, true)} style={{ transition: 'fill 0.2s ease' }}/>
+              const achPct = e.replanTarget > 0 ? e.replanActual / e.replanTarget : 0
+              return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_REPLAN : segFill(achPct)}
+                stroke="#fff" strokeWidth={1} style={{ transition: 'fill 0.2s ease' }}/>
             })}
             <LabelList dataKey="replanActual" content={SegLabel}/>
             <LabelList dataKey="total" position="top" content={TotalLabel}/>
