@@ -7,6 +7,7 @@ import { FilterBar }    from '../components/FilterBar'
 import { CombinedMonthlyChart } from '../components/CombinedMonthlyChart'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobs } from '../hooks/useProductionJobs'
+import { latestDate } from '../utils/targetPace'
 
 function Sk({ h='h-64' }: { h?: string }) { return <div className={`card ${h} animate-pulse bg-slate-100`}/> }
 function Err({ msg }: { msg: string }) { return <div className="card p-4 text-sm text-red-600 border-red-200 bg-red-50">⚠ {msg}</div> }
@@ -47,6 +48,9 @@ export function CombinedPage({ salesMap, prodJobs }: { salesMap: SalesMap; prodJ
   const chartReplan   = useMemo(() => f.filterForMonthly(rpM.rows), [f.filterForMonthly, rpM.rows])
   const chartAddpaper = useMemo(() => f.filterForMonthly(apM.rows), [f.filterForMonthly, apM.rows])
   const chartDetailForMonth = useMemo(() => f.filterForMonthly(detailAll), [f.filterForMonthly, detailAll])
+  const latestReplanDate   = useMemo(() => latestDate(rpDt.rows), [rpDt.rows])
+  const latestAddpaperDate = useMemo(() => latestDate(apDt.rows), [apDt.rows])
+  const latestAnyDate      = useMemo(() => latestDate(detailAll),  [detailAll])
 
   const filteredDetail = useMemo(() => f.filterRows(detailAll), [f.filterRows, detailAll])
 
@@ -155,7 +159,7 @@ export function CombinedPage({ salesMap, prodJobs }: { salesMap: SalesMap; prodJ
         clearChartSel={f.clearChartSel} onRefresh={handleRefresh}
         dateFrom={f.dateFrom} dateTo={f.dateTo} dateRangeActive={f.dateRangeActive}
         setDateFrom={f.setDateFrom} setDateTo={f.setDateTo}
-        latestDataDate={null} loadedAt={loadedAt}
+        latestDataDate={latestAnyDate} loadedAt={loadedAt}
       />
       {anyError && <Err msg={anyError}/>}
 
@@ -213,7 +217,8 @@ export function CombinedPage({ salesMap, prodJobs }: { salesMap: SalesMap; prodJ
           <CombinedMonthlyChart replanRows={chartReplan} addpaperRows={chartAddpaper}
             ddMonth={f.dd.month} chartMonths={f.chartSel.months} onClickMonth={f.toggleChartMonth}
             salesMap={salesMap} prevYearMap={prevYearMap}
-            detailRows={chartDetailForMonth} prodJobsMap={prodJobs.byMonth}/>
+            detailRows={chartDetailForMonth} prodJobsMap={prodJobs.byMonth}
+            latestReplanDate={latestReplanDate} latestAddpaperDate={latestAddpaperDate}/>
         )}
       </div>
     </div>

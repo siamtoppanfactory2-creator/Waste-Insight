@@ -5,6 +5,7 @@ import {
 import type { WasteRow } from '../types'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobsMap } from '../hooks/useProductionJobs'
+import { pacedTarget } from '../utils/targetPace'
 
 const COLOR_SALES = '#22c55e'  // พื้นหลัง sales (context)
 
@@ -114,7 +115,7 @@ function ChartLegend({ hasSales, hasPrevYr, hasProd }: { hasSales: boolean; hasP
   )
 }
 
-interface TooltipEntry { name: string; value: number; payload?: { replanTarget?: number; addpaperTarget?: number } }
+interface TooltipEntry { name: string; value: number; payload?: { replanPace?: number; addpaperPace?: number } }
 function CustomTooltip({ active, label, payload }: { active?: boolean; label?: string; payload?: TooltipEntry[] }) {
   if (!active || !payload?.length) return null
   const rp     = payload.find(p => p.name === 'replanActual')?.value   ?? 0
@@ -125,8 +126,8 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
   const count  = payload.find(p => p.name === 'count')?.value          ?? 0
   const prod   = payload.find(p => p.name === 'prodTotal')?.value      ?? 0
   const row      = payload[0]?.payload ?? {}
-  const rpTarget = row.replanTarget   ?? 0
-  const apTarget = row.addpaperTarget ?? 0
+  const rpTarget = row.replanPace   ?? 0
+  const apTarget = row.addpaperPace ?? 0
   const total  = rp + ap
   const wasteRate = (sales > 0 && total > 0) ? (total / sales * 100) : null
   const yoy = (prevYr > 0 && total > 0) ? (total - prevYr) / prevYr * 100 : null
@@ -186,11 +187,13 @@ interface Props {
   prevYearMap?: Map<string, number>  // key `${year}-${monthNo}` → ยอดรวม Actual (ทุกปี)
   detailRows?:  WasteRow[]           // DETAIL รวมสองชุด — ใช้นับจำนวนงานต่อเดือน
   prodJobsMap?: ProductionJobsMap    // จำนวน job ผลิตต่อเดือน (Config_ProductionJobs)
+  latestReplanDate?:   string | null // "dd-mmm-yyyy" — วันที่ข้อมูลล่าสุดของแต่ละชุด ใช้คิด target ต่อวัน
+  latestAddpaperDate?: string | null
 }
 
 interface Row { key: string; label: string; year: number; monthNo: number; replanActual: number; addpaperActual: number; replanTarget: number; addpaperTarget: number; target: number; total: number; sales: number }
 
-export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartMonths, onClickMonth, salesMap, prevYearMap, detailRows, prodJobsMap }: Props) {
+export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartMonths, onClickMonth, salesMap, prevYearMap, detailRows, prodJobsMap, latestReplanDate, latestAddpaperDate }: Props) {
   const map = new Map<string, Row>()
 
   // จำนวนงานที่เกิด waste ต่อเดือน (รวมสองชุด)
@@ -222,7 +225,10 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
       const prevYear = pv && pv > 0 ? pv : null
       // เดือนที่ยังไม่กรอก job ผลิต = null → เส้นเว้นช่อง ไม่ลากลงศูนย์
       const prodTotal = prodJobsMap?.get(v.key)?.total ?? null
-      return { ...v, total: v.replanActual + v.addpaperActual, sales, prevYear, count: cntMap.get(v.key) ?? 0, prodTotal }
+      // target ถึงวันที่ข้อมูลล่าสุดของแต่ละชุด — ใช้คิดสี segment
+      const replanPace   = pacedTarget(v.year, v.monthNo, v.replanTarget,   latestReplanDate)
+      const addpaperPace = pacedTarget(v.year, v.monthNo, v.addpaperTarget, latestAddpaperDate)
+      return { ...v, total: v.replanActual + v.addpaperActual, sales, prevYear, count: cntMap.get(v.key) ?? 0, prodTotal, replanPace, addpaperPace }
     })
 
   if (!data.length) return <div className="card p-4 min-h-[300px] flex items-center justify-center text-slate-400 text-sm">No data</div>
@@ -280,7 +286,7 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <Bar dataKey="addpaperActual" name="addpaperActual" stackId="w" maxBarSize={40} cursor="pointer"
             animationDuration={500} animationEasing="ease-out">
             {data.map((e,i) => {
-              const achPct = e.addpaperTarget > 0 ? e.addpaperActual / e.addpaperTarget : 0
+              const achPct = e.addpaperPace > 0 ? e.addpaperActual / e.addpaperPace : 0
               return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_ADDPAPER : segFill(achPct)}
                 stroke="#fff" strokeWidth={1} style={{ transition: 'fill 0.2s ease' }}/>
             })}
@@ -290,7 +296,7 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <Bar dataKey="replanActual" name="replanActual" stackId="w" maxBarSize={40} cursor="pointer"
             animationDuration={500} animationEasing="ease-out">
             {data.map((e,i) => {
-              const achPct = e.replanTarget > 0 ? e.replanActual / e.replanTarget : 0
+              const achPct = e.replanPace > 0 ? e.replanActual / e.replanPace : 0
               return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_REPLAN : segFill(achPct)}
                 stroke="#fff" strokeWidth={1} style={{ transition: 'fill 0.2s ease' }}/>
             })}

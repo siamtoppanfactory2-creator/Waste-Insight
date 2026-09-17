@@ -5,6 +5,7 @@ import {
 import type { WasteRow } from '../types'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobsMap } from '../hooks/useProductionJobs'
+import { pacedTarget } from '../utils/targetPace'
 import type { Dataset } from '../types'
 
 function fmtK(v: number) {
@@ -74,7 +75,7 @@ function ChartLegend({ hasSales, hasProd }: { hasSales: boolean; hasProd: boolea
 }
 
 // Custom tooltip
-interface TooltipEntry { name: string; value: number; color?: string }
+interface TooltipEntry { name: string; value: number; color?: string; payload?: { paceTarget?: number; target?: number } }
 interface CustomTooltipProps {
   active?: boolean
   label?: string
@@ -91,6 +92,7 @@ function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
   const prodEntry    = payload.find(p => p.name === 'prodTotal')
   const actual  = actualEntry?.value ?? 0
   const sales   = salesEntry?.value  ?? 0
+  const row     = payload[0]?.payload ?? {}
   const wasteRate = (sales > 0 && actual > 0) ? (actual / sales * 100) : null
 
   return (
@@ -98,6 +100,11 @@ function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
       <p style={{ fontWeight:700, marginBottom:6, color:'#0f172a' }}>{label}</p>
       {actualEntry  && <p style={{ color:'#ef4444', margin:'2px 0' }}>Actual: <strong>{fmtFull(actual)}</strong></p>}
       {targetEntry  && <p style={{ color:'#2563eb', margin:'2px 0' }}>Target: {fmtFull(targetEntry.value)}</p>}
+      {row.paceTarget !== undefined && row.target !== undefined && row.paceTarget > 0 && row.paceTarget < row.target && (
+        <p style={{ color:'#64748b', margin:'2px 0' }}>
+          Target ถึงวันล่าสุด: {fmtFull(row.paceTarget)} · {(actual / row.paceTarget * 100).toFixed(0)}%
+        </p>
+      )}
       {prevEntry    && <p style={{ color:'#a78bfa', margin:'2px 0' }}>Prev Avg: {fmtFull(prevEntry.value)}</p>}
       {countEntry   && <p style={{ color:'#7c3aed', margin:'2px 0' }}>Jobs: {fmtFull(countEntry.value)}</p>}
       {prodEntry && prodEntry.value > 0 && (
@@ -131,9 +138,10 @@ interface Props {
   salesMap?:    SalesMap
   dataset?:     Dataset
   prodJobsMap?: ProductionJobsMap   // จำนวน job ผลิตต่อเดือน (Config_ProductionJobs)
+  latestDataDate?: string | null    // "dd-mmm-yyyy" — ใช้คิด target ต่อวันของเดือนล่าสุด
 }
 
-export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, onClickMonth, salesMap, dataset, prodJobsMap }: Props) {
+export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, onClickMonth, salesMap, dataset, prodJobsMap, latestDataDate }: Props) {
   const map = new Map<string, { label: string; monthNo: number; actual: number; target: number; prevAvg: number; achPct: number; count: number; sales: number }>()
 
   monthlyRows.forEach(r => {
@@ -152,7 +160,10 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
   })
 
   const data = Array.from(map.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([key, v]) => {
-    v.achPct = v.target > 0 ? v.actual / v.target : 0
+    // สีแท่งเทียบกับ target ถึงวันที่ของข้อมูลล่าสุด (เดือนที่จบแล้ว = target เต็มเดือน)
+    const [yr, mo] = key.split('-').map(Number)
+    const paceTarget = pacedTarget(yr, mo, v.target, latestDataDate)
+    v.achPct = paceTarget > 0 ? v.actual / paceTarget : 0
     v.count  = cntMap.get(key) ?? 0
     // Inject sales data
     if (salesMap && dataset) {
@@ -161,7 +172,7 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
     }
     // เดือนที่ยังไม่กรอก job ผลิต = null → เส้นเว้นช่อง ไม่ลากลงศูนย์
     const prodTotal = prodJobsMap?.get(key)?.total ?? null
-    return { ...v, key, prodTotal }
+    return { ...v, key, prodTotal, paceTarget }
   })
 
   if (!data.length) return <div className="card p-4 min-h-[300px] flex items-center justify-center text-slate-400 text-sm">No data</div>
