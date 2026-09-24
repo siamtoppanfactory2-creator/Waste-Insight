@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { ReplanPage }    from './pages/ReplanPage'
 import { AddpaperPage }  from './pages/AddpaperPage'
 import { CombinedPage }  from './pages/CombinedPage'
+import { InsightsPage }  from './pages/InsightsPage'
 import { useActionedJobs } from './hooks/useActionedJobs'
 import type { UseActionedJobsResult } from './hooks/useActionedJobs'
 import { useSalesData }   from './hooks/useSalesData'
@@ -34,8 +35,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 }
 
 // ── App ────────────────────────────────────────────────────────
-type Tab = 'Replan' | 'Addpaper' | 'Combined'
-const TAB_LABEL: Record<Tab, string> = { Replan: 'Replan', Addpaper: 'Addpaper', Combined: 'Combined' }
+type Tab = 'Replan' | 'Addpaper' | 'Combined' | 'Insights'
+const TAB_LABEL: Record<Tab, string> = { Replan: 'Replan', Addpaper: 'Addpaper', Combined: 'Combined', Insights: 'วิเคราะห์' }
 
 // Export type so pages can receive it as prop
 export type { UseActionedJobsResult }
@@ -64,7 +65,7 @@ export function App() {
             </div>
             <div className="w-px h-5 bg-slate-200"/>
             <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
-              {(['Replan','Addpaper','Combined'] as Tab[]).map(t => (
+              {(['Replan','Addpaper','Combined','Insights'] as Tab[]).map(t => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
                     tab===t ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
@@ -81,6 +82,7 @@ export function App() {
             {tab==='Replan'   && <ReplanPage   actioned={actioned} salesMap={salesMap} prodJobs={prodJobs}/>}
             {tab==='Addpaper' && <AddpaperPage actioned={actioned} salesMap={salesMap} prodJobs={prodJobs}/>}
             {tab==='Combined' && <CombinedPage salesMap={salesMap} prodJobs={prodJobs}/>}
+            {tab==='Insights' && <InsightsPage/>}
           </ErrorBoundary>
         </main>
       </div>
