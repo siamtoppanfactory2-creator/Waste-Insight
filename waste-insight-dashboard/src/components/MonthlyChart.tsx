@@ -28,8 +28,7 @@ function barFill(achPct: number, gray: boolean): string {
   if (achPct <= 0.75) return '#059669'
   if (achPct <= 0.90) return '#10b981'
   if (achPct <= 1.00) return '#f59e0b'
-  if (achPct <= 1.10) return '#f97316'
-  return '#ef4444'
+  return '#ef4444'  // เกิน target = แดงทันที
 }
 
 const BarLabel = ({ x=0, y=0, width=0, value=0, gray }: { x?: number; y?: number; width?: number; value?: number; gray?: boolean }) => {

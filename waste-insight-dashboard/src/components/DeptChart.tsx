@@ -15,7 +15,6 @@ function barColor(p: number): string {
   if (p <= 0.75) return '#059669'
   if (p <= 0.90) return '#10b981'
   if (p <= 1.00) return '#f59e0b'
-  if (p <= 1.10) return '#f97316'
   return '#ef4444'
 }
 

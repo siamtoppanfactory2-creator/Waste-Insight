@@ -19,8 +19,7 @@ const ACH_SCALE: { max: number; color: string; label: string }[] = [
   { max: 0.75,     color: '#059669', label: '≤75%'  },
   { max: 0.90,     color: '#10b981', label: '≤90%'  },
   { max: 1.00,     color: '#f59e0b', label: '≤100%' },
-  { max: 1.10,     color: '#f97316', label: '≤110%' },
-  { max: Infinity, color: '#ef4444', label: '>110%' },
+  { max: Infinity, color: '#ef4444', label: '>100%' },  // เกิน target = แดงทันที
 ]
 const COLOR_TARGET   = '#2563eb'  // น้ำเงิน — เส้น target รวม
 const COLOR_PREVYR   = '#64748b'  // เทา — จุดยอดรวมเดือนเดียวกันปีก่อน
