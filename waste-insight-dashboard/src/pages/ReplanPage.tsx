@@ -14,8 +14,8 @@ import type { UseActionedJobsResult } from '../hooks/useActionedJobs'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobs } from '../hooks/useProductionJobs'
 
-function Sk({ h='h-64' }: { h?: string }) { return <div className={`card ${h} animate-pulse bg-slate-100`}/> }
-function Err({ msg }: { msg: string }) { return <div className="card p-4 text-sm text-red-600 border-red-200 bg-red-50">⚠ {msg}</div> }
+function Sk({ h='h-64' }: { h?: string }) { return <div className={`card ${h} animate-pulse bg-slate-100 dark:bg-slate-800`}/> }
+function Err({ msg }: { msg: string }) { return <div className="card p-4 text-sm text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40">⚠ {msg}</div> }
 function fmtK(v: number) {
   if (v >= 1_000_000) return `${(v/1_000_000).toFixed(2)}M`
   if (v >= 1_000)     return `${(v/1_000).toFixed(1)}k`
@@ -27,7 +27,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 pt-1">
       <span className="section-label shrink-0">{children}</span>
-      <div className="flex-1 h-px bg-slate-200"/>
+      <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"/>
     </div>
   )
 }
@@ -156,7 +156,7 @@ export function ReplanPage({ actioned, salesMap, prodJobs }: { actioned: UseActi
     <div className="space-y-4">
       {/* Top loading bar */}
       {isLoadingAny && (
-        <div className="fixed top-14 left-0 right-0 z-50 h-0.5 bg-blue-100 overflow-hidden">
+        <div className="fixed top-14 left-0 right-0 z-50 h-0.5 bg-blue-100 dark:bg-blue-900/40 overflow-hidden">
           <div className="h-full bg-blue-500 animate-pulse" style={{ width: '60%', animation: 'loadbar 1.2s ease-in-out infinite' }}/>
         </div>
       )}

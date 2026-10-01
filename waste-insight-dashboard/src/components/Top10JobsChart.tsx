@@ -68,7 +68,7 @@ export function Top10JobsChart({ rows, chartJobs, onClickJob }: Props) {
               <XAxis type="number" tickFormatter={fmtK} tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false}/>
               <YAxis type="category" dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} width={90} axisLine={false} tickLine={false}/>
               <Tooltip formatter={(v: number) => [fmtFull(v), 'Value']}
-                contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}/>
+                contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)' }}/>
               <Bar dataKey="value" maxBarSize={16}>
                 {barData.map((e,i) => {
                   const gray = hasSel && !chartJobs.includes(e.jo)
@@ -83,12 +83,12 @@ export function Top10JobsChart({ rows, chartJobs, onClickJob }: Props) {
         <div className="flex-1 min-w-0 overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-slate-400">
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
                 <th className="text-left py-1.5 w-5">#</th>
                 <th className="text-left py-1.5">Date</th>
                 <th className="text-left py-1.5">JO</th>
                 <th className="text-left py-1.5">Comp</th>
-                <th className="text-right py-1.5 cursor-pointer hover:text-blue-600 select-none"
+                <th className="text-right py-1.5 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 select-none"
                   onClick={() => setSortDir(d => d==='desc'?'asc':'desc')}>
                   Value {sortDir==='desc'?'↓':'↑'}
                 </th>
@@ -98,7 +98,7 @@ export function Top10JobsChart({ rows, chartJobs, onClickJob }: Props) {
               {sorted.map((r,i) => {
                 const gray = hasSel && !chartJobs.includes(r.jo)
                 return (
-                  <tr key={r.jo} className="border-b border-slate-50 cursor-pointer"
+                  <tr key={r.jo} className="border-b border-slate-50 dark:border-slate-800 cursor-pointer"
                     style={{ opacity: gray ? 0.25 : 1, transition: 'opacity 0.2s ease' }}
                     onClick={e => onClickJob(r.jo, e.shiftKey)}
                     onMouseEnter={ev => {
@@ -107,10 +107,10 @@ export function Top10JobsChart({ rows, chartJobs, onClickJob }: Props) {
                     }}
                   >
                     <td className="py-1.5 text-slate-400">{i+1}</td>
-                    <td className="py-1.5 text-slate-600 whitespace-nowrap">{fmtDate(r.date)}</td>
-                    <td className="py-1.5 font-mono text-slate-600">{r.jo}</td>
-                    <td className="py-1.5 text-slate-700 max-w-[110px] truncate" title={r.comp}>{r.comp}</td>
-                    <td className="py-1.5 text-right font-mono text-slate-800">
+                    <td className="py-1.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">{fmtDate(r.date)}</td>
+                    <td className="py-1.5 font-mono text-slate-600 dark:text-slate-300">{r.jo}</td>
+                    <td className="py-1.5 text-slate-700 dark:text-slate-200 max-w-[110px] truncate" title={r.comp}>{r.comp}</td>
+                    <td className="py-1.5 text-right font-mono text-slate-800 dark:text-slate-100">
                       <span title={fmtFull(r.value)}>{fmtK(r.value)}</span>
                     </td>
                   </tr>
@@ -118,8 +118,8 @@ export function Top10JobsChart({ rows, chartJobs, onClickJob }: Props) {
               })}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-slate-200 font-semibold text-slate-700">
-                <td colSpan={4} className="pt-2 text-slate-500 text-xs">Total (top 10)</td>
+              <tr className="border-t-2 border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-200">
+                <td colSpan={4} className="pt-2 text-slate-500 dark:text-slate-400 text-xs">Total (top 10)</td>
                 <td className="pt-2 text-right font-mono text-xs"><span title={fmtFull(totalValue)}>{fmtK(totalValue)}</span></td>
               </tr>
             </tfoot>
@@ -128,15 +128,15 @@ export function Top10JobsChart({ rows, chartJobs, onClickJob }: Props) {
       </div>
 
       {tooltip && (
-        <div className="fixed z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-xs pointer-events-none max-w-[240px]"
+        <div className="fixed z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 text-xs pointer-events-none max-w-[240px]"
           style={{ top: Math.min(tooltip.y, window.innerHeight-220), left: Math.min(tooltip.x+8, window.innerWidth-256) }}>
-          <div className="font-semibold text-slate-800 mb-2">{tooltip.job.jo}</div>
-          <div className="space-y-1 text-slate-600">
+          <div className="font-semibold text-slate-800 dark:text-slate-100 mb-2">{tooltip.job.jo}</div>
+          <div className="space-y-1 text-slate-600 dark:text-slate-300">
             <div><span className="text-slate-400">Comp:</span> {tooltip.job.comp}</div>
             <div><span className="text-slate-400">Problem:</span> {tooltip.job.problem || '—'}</div>
             <div><span className="text-slate-400">JO Ref:</span> {tooltip.job.joRef || '—'}</div>
             <div><span className="text-slate-400">Machine:</span> {tooltip.job.machine || '—'}</div>
-            <div><span className="text-slate-400">Value:</span> <strong className="text-slate-800">{fmtFull(tooltip.job.value)}</strong></div>
+            <div><span className="text-slate-400">Value:</span> <strong className="text-slate-800 dark:text-slate-100">{fmtFull(tooltip.job.value)}</strong></div>
           </div>
         </div>
       )}

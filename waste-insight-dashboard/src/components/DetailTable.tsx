@@ -86,30 +86,30 @@ export function DetailTable({ rows, dataset, actionedJos }: Props) {
     setPage(1)
   }
   const thSort = (k: SortKey) =>
-    `cursor-pointer select-none hover:text-blue-600 ${sortKey===k ? 'text-blue-600' : ''}`
+    `cursor-pointer select-none hover:text-blue-600 dark:hover:text-blue-400 ${sortKey===k ? 'text-blue-600 dark:text-blue-400' : ''}`
 
   return (
     <div className="card min-h-[200px] relative" onMouseLeave={() => setTooltip(null)}>
       {/* Color legend */}
       <div className="flex items-center gap-3 px-4 pt-2 text-[10px] text-slate-400">
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-200 inline-block"/>Value ≥ 5,000 (ในโรงงาน)</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-100 border border-yellow-200 inline-block"/>เพิ่มใหม่ 7 วัน</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-900 inline-block"/>Value ≥ 5,000 (ในโรงงาน)</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-900 inline-block"/>เพิ่มใหม่ 7 วัน</span>
       </div>
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
         <h3 className="card-title shrink-0">Detail Records</h3>
         <span className="text-xs text-slate-400">{filtered.length.toLocaleString()} rows</span>
         <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
           placeholder="Search JO, cause, machine…"
-          className="ml-auto w-52 border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400 bg-slate-50"/>
+          className="ml-auto w-52 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400 bg-slate-50 dark:bg-slate-800/50"/>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead className="bg-slate-50">
-            <tr className="text-slate-400 border-b border-slate-100">
+          <thead className="bg-slate-50 dark:bg-slate-800/50">
+            <tr className="text-slate-400 border-b border-slate-100 dark:border-slate-800">
               <th className="px-3 py-2 text-left w-6">#</th>
               <th className={`px-3 py-2 text-left ${thSort('Date')}`} onClick={() => toggleSort('Date')}>
                 Date {sortKey==='Date'?(sortDir==='desc'?'↓':'↑'):''}
@@ -136,39 +136,39 @@ export function DetailTable({ rows, dataset, actionedJos }: Props) {
               const isNew  = isThisWeek(r.Date)
               const isBig  = (r.Value ?? 0) >= 5000 && !!r.Dept && IN_HOUSE_DEPTS.has(r.Dept)
               const isActioned = actionedJos?.has(rowKey(r))
-              const rowBg  = isNew ? 'bg-yellow-50 hover:bg-yellow-100/60' : isBig ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-blue-50/40'
+              const rowBg  = isNew ? 'bg-yellow-50 dark:bg-yellow-950/40 hover:bg-yellow-100/60 dark:hover:bg-yellow-900/30' : isBig ? 'bg-red-50/40 dark:bg-red-950/30 hover:bg-red-50/70 dark:hover:bg-red-950/40' : 'hover:bg-blue-50/40 dark:hover:bg-blue-950/30'
               return (
               <tr key={i}
-                className={`border-b border-slate-50 transition-colors ${rowBg}`}
+                className={`border-b border-slate-50 dark:border-slate-800 transition-colors ${rowBg}`}
                 onMouseEnter={ev => {
                   const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect()
                   setTooltip({ row: r, x: rect.right, y: rect.top })
                 }}
               >
-                <td className="px-3 py-1.5 text-slate-300">{(curPage-1)*PAGE_SIZE+i+1}</td>
-                <td className="px-3 py-1.5 text-slate-600 whitespace-nowrap">{fmtDate(r.Date)}</td>
-                <td className="px-3 py-1.5 font-mono text-slate-600">{r.JO}</td>
-                <td className="px-3 py-1.5 text-slate-700 max-w-[100px] truncate" title={r.Component||r.Code}>{r.Component||r.Code}</td>
+                <td className="px-3 py-1.5 text-slate-300 dark:text-slate-600">{(curPage-1)*PAGE_SIZE+i+1}</td>
+                <td className="px-3 py-1.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">{fmtDate(r.Date)}</td>
+                <td className="px-3 py-1.5 font-mono text-slate-600 dark:text-slate-300">{r.JO}</td>
+                <td className="px-3 py-1.5 text-slate-700 dark:text-slate-200 max-w-[100px] truncate" title={r.Component||r.Code}>{r.Component||r.Code}</td>
                 {isReplan && <td className="px-3 py-1.5 text-slate-400">{r.JORef||'—'}</td>}
-                <td className="px-3 py-1.5 text-slate-600">{r.Machine}</td>
-                <td className="px-3 py-1.5 text-slate-700 max-w-[140px] truncate" title={r.Problem||r.Cause}>{r.Problem||r.Cause}</td>
-                <td className="px-3 py-1.5 text-slate-600">{r.Dept}</td>
+                <td className="px-3 py-1.5 text-slate-600 dark:text-slate-300">{r.Machine}</td>
+                <td className="px-3 py-1.5 text-slate-700 dark:text-slate-200 max-w-[140px] truncate" title={r.Problem||r.Cause}>{r.Problem||r.Cause}</td>
+                <td className="px-3 py-1.5 text-slate-600 dark:text-slate-300">{r.Dept}</td>
                 <td className="px-3 py-1.5 text-right font-mono">
-                  <span title={fmtFull(r.Value)} className={isBig ? 'text-red-600 font-semibold' : 'text-slate-800'}>
+                  <span title={fmtFull(r.Value)} className={isBig ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-800 dark:text-slate-100'}>
                     {fmtK(r.Value)}
                   </span>
                   {isBig && isActioned && (
-                    <span className="ml-1 text-emerald-600 font-bold" title="พรีเซนแล้ว">✓</span>
+                    <span className="ml-1 text-emerald-600 dark:text-emerald-400 font-bold" title="พรีเซนแล้ว">✓</span>
                   )}
-                  {isNew && <span className="ml-1 text-[9px] bg-yellow-200 text-yellow-800 px-1 rounded font-medium">NEW</span>}
+                  {isNew && <span className="ml-1 text-[9px] bg-yellow-200 dark:bg-yellow-800/60 text-yellow-800 dark:text-yellow-300 px-1 rounded font-medium">NEW</span>}
                 </td>
               </tr>
             )})}
 
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold text-slate-700">
-              <td colSpan={isReplan?8:7} className="px-3 py-2 text-xs text-slate-500">
+            <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 font-semibold text-slate-700 dark:text-slate-200">
+              <td colSpan={isReplan?8:7} className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
                 Total ({filtered.length.toLocaleString()} rows)
               </td>
               <td className="px-3 py-2 text-right font-mono text-xs">
@@ -181,14 +181,14 @@ export function DetailTable({ rows, dataset, actionedJos }: Props) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 text-xs text-slate-500">
+        <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
           <span>Page {curPage} / {totalPages}</span>
           <div className="flex gap-1">
             {[['«',1],['‹ Prev',curPage-1],['Next ›',curPage+1],['»',totalPages]].map(([label,target],i) => (
               <button key={i}
                 onClick={() => setPage(Math.max(1, Math.min(totalPages, Number(target))))}
                 disabled={(i<2&&curPage===1)||(i>=2&&curPage===totalPages)}
-                className="px-2.5 py-1 border border-slate-200 rounded-lg disabled:opacity-30 hover:bg-slate-50 transition-colors">
+                className="px-2.5 py-1 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 {label}
               </button>
             ))}
@@ -198,17 +198,17 @@ export function DetailTable({ rows, dataset, actionedJos }: Props) {
 
       {/* Hover tooltip */}
       {tooltip && (
-        <div className="fixed z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-xs pointer-events-none max-w-[260px]"
+        <div className="fixed z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 text-xs pointer-events-none max-w-[260px]"
           style={{ top: Math.min(tooltip.y, window.innerHeight-220), left: Math.min(tooltip.x+8, window.innerWidth-276) }}>
-          <div className="font-semibold text-slate-800 mb-2">{tooltip.row.JO}</div>
-          <div className="space-y-1 text-slate-600">
+          <div className="font-semibold text-slate-800 dark:text-slate-100 mb-2">{tooltip.row.JO}</div>
+          <div className="space-y-1 text-slate-600 dark:text-slate-300">
             <div><span className="text-slate-400">Date:</span> {tooltip.row.Date??'—'}</div>
             <div><span className="text-slate-400">Dept:</span> {tooltip.row.Dept}</div>
             <div><span className="text-slate-400">Comp:</span> {tooltip.row.Component||tooltip.row.Code}</div>
             {isReplan && <div><span className="text-slate-400">JO Ref:</span> {tooltip.row.JORef||'—'}</div>}
             <div><span className="text-slate-400">Machine:</span> {tooltip.row.Machine}</div>
             <div><span className="text-slate-400">Problem:</span> {tooltip.row.Problem||tooltip.row.Cause}</div>
-            <div><span className="text-slate-400">Value:</span> <strong className="text-slate-800">{fmtFull(tooltip.row.Value)}</strong></div>
+            <div><span className="text-slate-400">Value:</span> <strong className="text-slate-800 dark:text-slate-100">{fmtFull(tooltip.row.Value)}</strong></div>
             <div><span className="text-slate-400">QtySheet:</span> {fmtFull(tooltip.row.QtySheet)}</div>
           </div>
         </div>

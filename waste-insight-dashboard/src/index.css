@@ -21,6 +21,36 @@
     --red:      #dc2626;
     --amber:    #d97706;
     --purple:   #7c3aed;
+    /* extra tokens used by inline styles (tooltips, callouts, heatmap) */
+    --divider:     #f1f5f9;
+    --text-strong: #334155;
+    --text-muted:  #64748b;
+    --subtle-bg:   #f8fafc;
+    --good-bg:     #f0fdf4;
+    --good-fg:     #047857;
+    --bad-bg:      #fef2f2;
+    --bad-fg:      #dc2626;
+    --shadow:      rgba(0,0,0,0.1);
+    color-scheme: light;
+  }
+
+  :root.dark {
+    --bg:          #020617;
+    --surface:     #0f172a;
+    --border:      #334155;
+    --text-1:      #f1f5f9;
+    --text-2:      #cbd5e1;
+    --text-3:      #94a3b8;
+    --divider:     #1e293b;
+    --text-strong: #e2e8f0;
+    --text-muted:  #94a3b8;
+    --subtle-bg:   #1e293b;
+    --good-bg:     rgba(16,185,129,0.12);
+    --good-fg:     #34d399;
+    --bad-bg:      rgba(239,68,68,0.12);
+    --bad-fg:      #f87171;
+    --shadow:      rgba(0,0,0,0.5);
+    color-scheme: dark;
   }
 
   body {
@@ -33,10 +63,10 @@
 
 @layer components {
   .card {
-    @apply bg-white rounded-xl border border-slate-200 shadow-sm;
+    @apply bg-white rounded-xl border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800;
   }
   .card-title {
-    @apply text-sm font-semibold text-slate-700;
+    @apply text-sm font-semibold text-slate-700 dark:text-slate-200;
   }
   .section-label {
     @apply text-xs font-semibold uppercase tracking-widest text-slate-400;
@@ -45,6 +75,32 @@
     @apply text-2xl font-bold tabular-nums;
   }
   .chip {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-full;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-full dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-300;
   }
 }
+
+/*
+ * Dark theme for chart chrome. Recharts writes colours as SVG attributes
+ * (fill="#94a3b8"), and a CSS rule outranks an attribute, so these remap the
+ * neutral greys without touching each chart. Data colours (bars, lines) are untouched.
+ */
+.dark .recharts-wrapper [stroke="#f1f5f9"] { stroke: #1e293b; }   /* grid lines */
+.dark .recharts-wrapper [stroke="#fff"],
+.dark .recharts-wrapper [stroke="#ffffff"] { stroke: #0f172a; }    /* segment dividers, dot rims */
+.dark .recharts-wrapper [fill="#fff"],
+.dark .recharts-wrapper [fill="#ffffff"]   { fill: #0f172a; }      /* hollow dot centres */
+.dark .recharts-wrapper [fill="#e2e8f0"]   { fill: #334155; }      /* dimmed (unselected) bars */
+.dark .recharts-wrapper [fill="#f1f5f9"]   { fill: #1e293b; }
+.dark .recharts-wrapper [fill="#cbd5e1"]   { fill: #475569; }
+.dark .recharts-wrapper text[fill="#94a3b8"] { fill: #94a3b8; }
+.dark .recharts-wrapper text[fill="#64748b"] { fill: #94a3b8; }
+.dark .recharts-wrapper text[fill="#475569"],
+.dark .recharts-wrapper text[fill="#334155"] { fill: #cbd5e1; }
+.dark .recharts-wrapper text[fill="#0f172a"] { fill: #f1f5f9; }
+.dark .recharts-default-tooltip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0;
+}
+.dark .recharts-default-tooltip .recharts-tooltip-label { color: #f1f5f9; }
+.dark .recharts-legend-item-text { color: #cbd5e1 !important; }

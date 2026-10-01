@@ -66,7 +66,7 @@ const TotalLabel = (p: LabelProps) => {
 
 function ChartLegend({ hasSales, hasPrevYr, hasProd }: { hasSales: boolean; hasPrevYr: boolean; hasProd: boolean }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mb-3">
       <span className="flex items-center gap-1.5">
         <svg width="12" height="14" aria-hidden="true">
           <rect x="0" y="0" width="12" height="6" rx="1" fill="#94a3b8"/>
@@ -106,7 +106,7 @@ function ChartLegend({ hasSales, hasPrevYr, hasProd }: { hasSales: boolean; hasP
       )}
       {hasSales && (
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-emerald-200 border border-emerald-400 inline-block"/>
+          <span className="w-3 h-3 rounded-sm bg-emerald-200 dark:bg-emerald-800/50 border border-emerald-400 inline-block"/>
           Sales (context)
         </span>
       )}
@@ -131,28 +131,28 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
   const wasteRate = (sales > 0 && total > 0) ? (total / sales * 100) : null
   const yoy = (prevYr > 0 && total > 0) ? (total - prevYr) / prevYr * 100 : null
   return (
-    <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'10px 14px', fontSize:11, boxShadow:'0 4px 16px rgba(0,0,0,0.1)', minWidth:180 }}>
-      <p style={{ fontWeight:700, marginBottom:6, color:'#0f172a' }}>{label}</p>
+    <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 14px', fontSize:11, boxShadow:'0 4px 16px var(--shadow)', minWidth:180 }}>
+      <p style={{ fontWeight:700, marginBottom:6, color:'var(--text-1)' }}>{label}</p>
       <p style={{ color: segFill(rpTarget > 0 ? rp / rpTarget : 0), margin:'2px 0' }}>Replan: {fmtFull(rp)}</p>
       <p style={{ color: segFill(apTarget > 0 ? ap / apTarget : 0), margin:'2px 0' }}>Addpaper: {fmtFull(ap)}</p>
-      <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
-      <p style={{ color:'#0f172a', margin:'2px 0', fontWeight:700 }}>Total: {fmtFull(total)}</p>
+      <hr style={{ border:'none', borderTop:'1px solid var(--divider)', margin:'6px 0' }}/>
+      <p style={{ color:'var(--text-1)', margin:'2px 0', fontWeight:700 }}>Total: {fmtFull(total)}</p>
       {target > 0 && <p style={{ color: COLOR_TARGET, margin:'2px 0' }}>Target: {fmtFull(target)}</p>}
       {(count > 0 || prod > 0) && (
         <>
-          <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
+          <hr style={{ border:'none', borderTop:'1px solid var(--divider)', margin:'6px 0' }}/>
           {count > 0 && <p style={{ color: COLOR_JOBS, margin:'2px 0' }}>Jobs: {fmtFull(count)}</p>}
           {prod > 0 && (
             <p style={{ color: COLOR_PROD, margin:'2px 0' }}>
               งานผลิตทั้งหมด: {fmtFull(prod)}
-              {count > 0 && <span style={{ color:'#64748b' }}> · {(count / prod * 100).toFixed(1)}%</span>}
+              {count > 0 && <span style={{ color:'var(--text-muted)' }}> · {(count / prod * 100).toFixed(1)}%</span>}
             </p>
           )}
         </>
       )}
       {prevYr > 0 && (
         <>
-          <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
+          <hr style={{ border:'none', borderTop:'1px solid var(--divider)', margin:'6px 0' }}/>
           <p style={{ color: COLOR_PREVYR, margin:'2px 0' }}>ปีก่อน: {fmtFull(prevYr)}</p>
           {yoy !== null && (
             <p style={{ color: yoy > 0 ? '#ef4444' : '#059669', margin:'2px 0', fontWeight:700 }}>
@@ -163,7 +163,7 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
       )}
       {sales > 0 && (
         <>
-          <hr style={{ border:'none', borderTop:'1px solid #f1f5f9', margin:'6px 0' }}/>
+          <hr style={{ border:'none', borderTop:'1px solid var(--divider)', margin:'6px 0' }}/>
           <p style={{ color:'#059669', margin:'2px 0' }}>Sales: {fmtFull(sales)}</p>
           {wasteRate !== null && (
             <p style={{ color: wasteRate > 5 ? '#ef4444' : wasteRate > 3 ? '#f59e0b' : '#059669', margin:'2px 0', fontWeight:700 }}>

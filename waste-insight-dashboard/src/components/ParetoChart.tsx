@@ -35,7 +35,7 @@ function ParetoTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
   const fullName = (payload[0]?.payload as { fullName?: string })?.fullName ?? ''
   return (
-    <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:8, padding:'10px 12px', fontSize:11, boxShadow:'0 4px 12px rgba(0,0,0,0.08)' }}>
+    <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 12px', fontSize:11, boxShadow:'0 4px 12px var(--shadow)' }}>
       {fullName && <p style={{ fontWeight:600, marginBottom:4, maxWidth:220 }}>{fullName}</p>}
       {payload.map((p,i) => (
         <p key={i} style={{ color: p.color, margin:'2px 0' }}>
@@ -65,7 +65,7 @@ function SinglePareto({ rows, metricKey, title, fillColor, selected, onClickBar 
 
   return (
     <div className="flex-1 min-w-0">
-      <p className="text-xs font-semibold text-slate-500 mb-2">{title}</p>
+      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">{title}</p>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 8, right: 44, bottom: 56, left: 12 }} style={{ cursor: 'pointer' }}
           onClick={(d, e) => {
@@ -107,7 +107,7 @@ export function ParetoChart({ rows, selectedProblems, onClickProblem }: Props) {
       <div className="flex gap-8">
         <SinglePareto rows={rows} metricKey="Value" title="by Value (THB)" fillColor="#2563eb"
           selected={selectedProblems} onClickBar={onClickProblem}/>
-        <div className="w-px bg-slate-100 self-stretch"/>
+        <div className="w-px bg-slate-100 dark:bg-slate-800 self-stretch"/>
         <SinglePareto rows={rows} metricKey="Count" title="by Count (jobs)" fillColor="#059669"
           selected={selectedProblems} onClickBar={onClickProblem}/>
       </div>

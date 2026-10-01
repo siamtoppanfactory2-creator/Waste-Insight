@@ -13,18 +13,18 @@ interface KpiCardProps {
 }
 
 const accentMap = {
-  blue:   { bar: 'bg-blue-500',    val: 'text-blue-600'    },
-  green:  { bar: 'bg-emerald-500', val: 'text-emerald-600' },
-  red:    { bar: 'bg-red-500',     val: 'text-red-600'     },
-  purple: { bar: 'bg-violet-500',  val: 'text-violet-600'  },
-  amber:  { bar: 'bg-amber-500',   val: 'text-amber-600'   },
+  blue:   { bar: 'bg-blue-500',    val: 'text-blue-600 dark:text-blue-400'    },
+  green:  { bar: 'bg-emerald-500', val: 'text-emerald-600 dark:text-emerald-400' },
+  red:    { bar: 'bg-red-500',     val: 'text-red-600 dark:text-red-400'     },
+  purple: { bar: 'bg-violet-500',  val: 'text-violet-600 dark:text-violet-400'  },
+  amber:  { bar: 'bg-amber-500',   val: 'text-amber-600 dark:text-amber-400'   },
 }
 
 function TrendIcon({ t }: { t?: string | null }) {
   if (!t) return null
   const isUp   = t.startsWith('up')
   const isGood = t.endsWith('good')
-  return <span className={`font-bold text-sm ${isGood ? 'text-emerald-600' : 'text-red-500'}`}>{isUp ? '▲' : '▼'}</span>
+  return <span className={`font-bold text-sm ${isGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>{isUp ? '▲' : '▼'}</span>
 }
 
 export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, accent = 'blue', progress, progressBad = true, breakdown }: KpiCardProps) {
@@ -54,7 +54,7 @@ export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, ac
       {(sub1 || sub2) && (
         <div className="pl-1 space-y-0.5">
           {sub1 && (
-            <p className="text-xs text-slate-500 flex items-center gap-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
               <TrendIcon t={trend1}/>{sub1}
             </p>
           )}
@@ -71,8 +71,8 @@ export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, ac
         <div className="pl-1 mt-1 space-y-0.5">
           {breakdown.map((b,i) => (
             <p key={i} className="text-xs flex items-center justify-between pr-2">
-              <span className="text-slate-500">{b.label}</span>
-              <span className="font-medium tabular-nums" style={{ color: b.color ?? '#475569' }}>{b.value}</span>
+              <span className="text-slate-500 dark:text-slate-400">{b.label}</span>
+              <span className="font-medium tabular-nums" style={{ color: b.color ?? 'var(--text-2)' }}>{b.value}</span>
             </p>
           ))}
         </div>
@@ -81,7 +81,7 @@ export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, ac
       {/* Progress bar vs target */}
       {progress !== null && progress !== undefined && progress > 0 && (
         <div className="mt-2 pl-1">
-          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
             <div className="h-1.5 rounded-full transition-all duration-500"
               style={{ width: `${barPct}%`, background: barColor }}/>
           </div>

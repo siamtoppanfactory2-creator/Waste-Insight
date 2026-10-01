@@ -33,8 +33,8 @@ function DeptTooltip({ active, payload }: { active?: boolean; payload?: Array<{ 
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div style={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', background: '#fff', padding: '8px 10px' }}>
-      <p style={{ fontWeight: 600, color: '#334155', marginBottom: 4 }}>{d.dept}</p>
+    <div style={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', boxShadow: '0 4px 12px var(--shadow)', background:'var(--surface)', padding: '8px 10px' }}>
+      <p style={{ fontWeight: 600, color:'var(--text-strong)', marginBottom: 4 }}>{d.dept}</p>
       <p style={{ color: '#059669' }}>Actual : {fmtFull(d.actual)}</p>
       <p style={{ color: '#93c5fd' }}>Target : {fmtFull(d.target)}</p>
       <p style={{ color: '#ef4444', marginTop: 2 }}>งานเกิน 5,000 : {d.bigJobs} งาน</p>

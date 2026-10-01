@@ -65,15 +65,15 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
   const RowCard = ({ item, dimmed }: { item: RowItem; dimmed: boolean }) => (
     <div className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all ${
       dimmed
-        ? 'bg-slate-50 border-slate-100 opacity-60 hover:opacity-80'
-        : 'bg-red-50/60 border-red-100 hover:bg-red-50'
+        ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 opacity-60 hover:opacity-80'
+        : 'bg-red-50/60 dark:bg-red-950/30 border-red-100 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/40'
     }`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`font-mono text-xs font-semibold ${dimmed ? 'text-slate-500 line-through' : 'text-slate-700'}`}>{item.jo}</span>
-          <span className="text-xs text-slate-600 truncate max-w-[150px]" title={item.comp}>{item.comp}</span>
-          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">{item.dept}</span>
-          {item.problem && <span className="text-[10px] bg-orange-50 text-orange-600 border border-orange-100 px-1.5 rounded truncate max-w-[120px]" title={item.problem}>{item.problem}</span>}
+          <span className={`font-mono text-xs font-semibold ${dimmed ? 'text-slate-500 dark:text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200'}`}>{item.jo}</span>
+          <span className="text-xs text-slate-600 dark:text-slate-300 truncate max-w-[150px]" title={item.comp}>{item.comp}</span>
+          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 rounded">{item.dept}</span>
+          {item.problem && <span className="text-[10px] bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-900/60 px-1.5 rounded truncate max-w-[120px]" title={item.problem}>{item.problem}</span>}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[10px] text-slate-400">{item.machine}</span>
@@ -82,11 +82,11 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-sm font-bold ${dimmed ? 'text-slate-400' : 'text-red-600'}`} title={fmtFull(item.value)}>
+        <span className={`text-sm font-bold ${dimmed ? 'text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={fmtFull(item.value)}>
           {fmtK(item.value)}
         </span>
         {dimmed
-          ? <button onClick={() => onToggle(item.key)} className="px-2.5 py-1 text-xs text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">↩ Undo</button>
+          ? <button onClick={() => onToggle(item.key)} className="px-2.5 py-1 text-xs text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">↩ Undo</button>
           : <button onClick={() => onToggle(item.key)} className="px-2.5 py-1 text-xs font-medium bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors">✓ Done</button>
         }
       </div>
@@ -103,17 +103,17 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
         </div>
         <div className="ml-auto flex items-center gap-2">
           {loading && <span className="text-xs text-slate-400 animate-pulse">syncing…</span>}
-          <button onClick={onRefetch} className="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 rounded-lg px-2.5 py-1.5">⟳ Sync</button>
+          <button onClick={onRefetch} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5">⟳ Sync</button>
         </div>
       </div>
 
       {/* Stats */}
       <div className="flex gap-3 mb-3 text-xs">
-        <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-full border border-red-100">
+        <span className="flex items-center gap-1.5 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 px-2.5 py-1 rounded-full border border-red-100 dark:border-red-900/60">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"/>
           ต้องเสนอ: <strong>{pending.length}</strong> รายการ
         </span>
-        <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-100">
+        <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-900/60">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"/>
           เสนอแล้ว: <strong>{actioned.length}</strong>
         </span>
@@ -124,7 +124,7 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
       {pending.length > 1 && (
         <button
           onClick={() => onToggleMany(pending.map(i => i.key))}
-          className="w-full mb-3 py-2 text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition-colors">
+          className="w-full mb-3 py-2 text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 rounded-lg transition-colors">
           ✓ Mark ทั้งหมดเป็น Done ({pending.length} รายการ · {fmtK(pending.reduce((s,i)=>s+i.value,0))} THB)
         </button>
       )}
@@ -132,7 +132,7 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
       {/* Pending */}
       {pending.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">
+          <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2">
             🔴 ต้องเสนอ ({pending.length})
           </p>
           <div className="space-y-1.5">
@@ -145,7 +145,7 @@ export function ActionList({ rows, actionedJos, onToggle, onToggleMany, loading,
       {actioned.length > 0 && (
         <div>
           <button onClick={() => setShowActioned(s => !s)}
-            className="flex items-center gap-2 text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2 hover:text-emerald-800">
+            className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 hover:text-emerald-800 dark:hover:text-emerald-300">
             <span>✅ เสนอแล้ว ({actioned.length})</span>
             <span className="text-slate-400">{showActioned ? '▲' : '▼'}</span>
           </button>
