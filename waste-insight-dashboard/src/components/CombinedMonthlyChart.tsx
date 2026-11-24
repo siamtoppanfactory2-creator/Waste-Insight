@@ -7,6 +7,9 @@ import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobsMap } from '../hooks/useProductionJobs'
 import { pacedTarget } from '../utils/targetPace'
 
+// Tooltip อยู่ทางขวาของเมาส์เสมอ (ไม่พลิกไปซ้ายเมื่อชิดขอบ ล้นออกนอกกราฟได้) และชิดด้านบนของกราฟ
+const TOOLTIP_RIGHT_TOP = { allowEscapeViewBox: { x: true }, position: { y: 0 }, wrapperStyle: { zIndex: 20 } } as const
+
 const COLOR_SALES = '#22c55e'  // พื้นหลัง sales (context)
 
 // สีจาง เมื่อเดือนไม่ถูกเลือก
@@ -272,7 +275,7 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           {/* Hidden sales axis — domain=[0,1] ให้ sales flood เป็นพื้นหลัง (เหมือนหน้า Replan/Addpaper) */}
           {hasSales && <YAxis yAxisId="s" hide domain={[0, 1]}/>}
 
-          <Tooltip content={<CustomTooltip/>} cursor={{ fill: 'rgba(148,163,184,0.08)' }}/>
+          <Tooltip {...TOOLTIP_RIGHT_TOP} content={<CustomTooltip/>} cursor={{ fill: 'rgba(148,163,184,0.08)' }}/>
 
           {/* Sales background area — ด้านหลังสุด */}
           {hasSales && (

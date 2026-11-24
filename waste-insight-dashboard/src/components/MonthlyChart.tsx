@@ -8,6 +8,9 @@ import type { ProductionJobsMap } from '../hooks/useProductionJobs'
 import { pacedTarget } from '../utils/targetPace'
 import type { Dataset } from '../types'
 
+// Tooltip อยู่ทางขวาของเมาส์เสมอ (ไม่พลิกไปซ้ายเมื่อชิดขอบ ล้นออกนอกกราฟได้) และชิดด้านบนของกราฟ
+const TOOLTIP_RIGHT_TOP = { allowEscapeViewBox: { x: true }, position: { y: 0 }, wrapperStyle: { zIndex: 20 } } as const
+
 function fmtK(v: number) {
   if (v >= 1_000_000_000) return `${(v/1_000_000_000).toFixed(1)}B`
   if (v >= 1_000_000)     return `${(v/1_000_000).toFixed(1)}M`
@@ -218,7 +221,7 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
           {/* Hidden sales axis — domain=[0,1] ทำให้ sales ล้น chart height = flood effect */}
           {hasSales && <YAxis yAxisId="s" hide domain={[0, 1]}/>}
 
-          <Tooltip content={<CustomTooltip/>}/>
+          <Tooltip {...TOOLTIP_RIGHT_TOP} content={<CustomTooltip/>}/>
 
           {/* Sales background area — ด้านหลังสุด */}
           {hasSales && (
