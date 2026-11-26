@@ -1,6 +1,6 @@
 // การวิเคราะห์สำหรับแท็บ Insights — ฟังก์ชันล้วน ไม่แตะ React
 import type { WasteRow } from '../types'
-import { parseDataDate } from './targetPace'
+import { parseDataDate, achRatio } from './targetPace'
 import { normalizeProblem } from './problemMap'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -66,7 +66,7 @@ export function forecastMonthEnd(monthlyRows: WasteRow[], latestDate: string | n
   const allowance = target > actual && daysLeft > 0 ? (target - actual) / daysLeft : null
   return {
     label: `${MONTH_ABBR[d.monthNo - 1]} ${d.year}`, latestDate, day, daysInMonth,
-    actual, target, perDay, projected, projPct: target > 0 ? projected / target : 0, allowance,
+    actual, target, perDay, projected, projPct: achRatio(projected, target), allowance,
   }
 }
 

@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, Cell, LabelList, Legend,
 } from 'recharts'
 import type { WasteRow } from '../types'
+import { achRatio } from '../utils/targetPace'
 
 function fmtK(v: number) {
   if (v >= 1_000_000) return `${(v/1_000_000).toFixed(1)}M`
@@ -37,6 +38,7 @@ function DeptTooltip({ active, payload }: { active?: boolean; payload?: Array<{ 
       <p style={{ fontWeight: 600, color:'var(--text-strong)', marginBottom: 4 }}>{d.dept}</p>
       <p style={{ color: '#059669' }}>Actual : {fmtFull(d.actual)}</p>
       <p style={{ color: '#93c5fd' }}>Target : {fmtFull(d.target)}</p>
+      {!isFinite(d.achPct) && <p style={{ color: '#ef4444' }}>ไม่มี target ของแผนกนี้ — มีของเสีย = เกิน target</p>}
       <p style={{ color: '#ef4444', marginTop: 2 }}>งานเกิน 5,000 : {d.bigJobs} งาน</p>
     </div>
   )
@@ -58,7 +60,7 @@ export function DeptChart({ deptRows, detailRows, chartDepts, onClickDept }: Pro
   })
 
   const data = Array.from(map.entries())
-    .map(([dept, { actual, target }]) => ({ dept, actual, target, achPct: target>0 ? actual/target : 0, bigJobs: bigMap.get(dept) ?? 0 }))
+    .map(([dept, { actual, target }]) => ({ dept, actual, target, achPct: achRatio(actual, target), bigJobs: bigMap.get(dept) ?? 0 }))
     .sort((a,b) => b.actual - a.actual)
 
   if (!data.length) return (
@@ -89,7 +91,7 @@ export function DeptChart({ deptRows, detailRows, chartDepts, onClickDept }: Pro
               return <Cell key={i} fill={gray ? '#e2e8f0' : barColor(e.achPct)} style={{ transition: 'fill 0.2s ease' }}/>
             })}
             <LabelList dataKey="achPct" position="right"
-              formatter={(v: number) => `${(v*100).toFixed(1)}%`}
+              formatter={(v: number) => isFinite(v) ? `${(v*100).toFixed(1)}%` : 'ไม่มี target'}
               style={{ fontSize: 9, fill: '#94a3b8' }}/>
           </Bar>
 

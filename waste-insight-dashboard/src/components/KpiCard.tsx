@@ -85,7 +85,7 @@ export function KpiCard({ label, value, valueSub, sub1, sub2, trend1, trend2, ac
             <div className="h-1.5 rounded-full transition-all duration-500"
               style={{ width: `${barPct}%`, background: barColor }}/>
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">{(p * 100).toFixed(0)}% of target</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{isFinite(p) ? `${(p * 100).toFixed(0)}% of target` : 'ไม่มี target'}</p>
         </div>
       )}
     </div>

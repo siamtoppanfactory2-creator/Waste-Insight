@@ -49,3 +49,15 @@ export function pacedTarget(
   const daysInMonth = new Date(year, monthNo, 0).getDate()
   return monthTarget / daysInMonth * Math.min(d.day, daysInMonth)
 }
+
+/**
+ * Actual ÷ Target สำหรับคิดสี
+ * - target > 0            → actual / target
+ * - target = 0, มีของเสีย → Infinity (ไม่มีเผื่อไว้เลย = เกิน target ทันที → แดง)
+ * - target = 0, ไม่มีของเสีย → 0
+ * ใช้ isFinite() เช็คก่อนแสดงเป็น % เพื่อเขียนว่า "ไม่มี target" แทน
+ */
+export function achRatio(actual: number, target: number): number {
+  if (target > 0) return actual / target
+  return actual > 0 ? Infinity : 0
+}

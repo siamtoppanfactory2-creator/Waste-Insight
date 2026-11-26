@@ -13,6 +13,7 @@ import { ActionList }      from '../components/ActionList'
 import type { UseActionedJobsResult } from '../hooks/useActionedJobs'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobs } from '../hooks/useProductionJobs'
+import { achRatio } from '../utils/targetPace'
 
 function Sk({ h='h-64' }: { h?: string }) { return <div className={`card ${h} animate-pulse bg-slate-100 dark:bg-slate-800`}/> }
 function Err({ msg }: { msg: string }) { return <div className="card p-4 text-sm text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40">⚠ {msg}</div> }
@@ -153,11 +154,11 @@ export function AddpaperPage({ actioned, salesMap, prodJobs }: { actioned: UseAc
           <KpiCard label="Total Waste (THB)" value={fmtK(kpi.totalValue)}
             sub1={kpi.totalTarget > 0 && kpi.achPct !== null
               ? `Target: ${fmtK(kpi.totalTarget)} · ${(-kpi.achPct) >= 0 ? '+' : ''}${(-kpi.achPct).toFixed(1)}% vs target`
-              : undefined}
+              : kpi.totalValue > 0 ? 'Target: 0 · ไม่มี target = เกิน target' : undefined}
             sub2={kpi.vsPrevPct !== null ? `${kpi.vsPrevPct >= 0 ? '▲' : '▼'} ${Math.abs(kpi.vsPrevPct).toFixed(1)}% vs prev month` : undefined}
-            trend1={kpi.achPct !== null ? (kpi.achPct >= 0 ? 'up-bad' : 'down-good') : null}
+            trend1={kpi.achPct !== null ? (kpi.achPct >= 0 ? 'up-bad' : 'down-good') : kpi.totalValue > 0 ? 'up-bad' : null}
             accent="blue"
-            progress={kpi.totalTarget > 0 ? kpi.totalValue / kpi.totalTarget : null}
+            progress={kpi.totalValue > 0 ? achRatio(kpi.totalValue, kpi.totalTarget) : null}
             progressBad={true}/>
           {kpi.totalSales === 0 && kpi.wasteRate !== null && (
             <KpiCard label="Waste Rate" value={`${kpi.wasteRate.toFixed(2)}%`} sub1="waste / sales revenue" accent="amber"/>

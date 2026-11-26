@@ -5,7 +5,7 @@ import {
 import type { WasteRow } from '../types'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobsMap } from '../hooks/useProductionJobs'
-import { pacedTarget } from '../utils/targetPace'
+import { pacedTarget, achRatio } from '../utils/targetPace'
 import type { Dataset } from '../types'
 
 // Tooltip อยู่ทางขวาของเมาส์เสมอ (ไม่พลิกไปซ้ายเมื่อชิดขอบ ล้นออกนอกกราฟได้) และชิดด้านบนของกราฟ
@@ -165,7 +165,7 @@ export function MonthlyChart({ monthlyRows, detailRows, ddMonth, chartMonths, on
     // สีแท่งเทียบกับ target ถึงวันที่ของข้อมูลล่าสุด (เดือนที่จบแล้ว = target เต็มเดือน)
     const [yr, mo] = key.split('-').map(Number)
     const paceTarget = pacedTarget(yr, mo, v.target, latestDataDate)
-    v.achPct = paceTarget > 0 ? v.actual / paceTarget : 0
+    v.achPct = achRatio(v.actual, paceTarget)
     v.count  = cntMap.get(key) ?? 0
     // Inject sales data
     if (salesMap && dataset) {

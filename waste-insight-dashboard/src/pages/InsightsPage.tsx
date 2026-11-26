@@ -7,7 +7,7 @@ import {
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobs } from '../hooks/useProductionJobs'
 import { useWasteData } from '../hooks/useWasteData'
-import { latestDate } from '../utils/targetPace'
+import { latestDate, achRatio } from '../utils/targetPace'
 import {
   achColor, toDate, customerOf, problemOf, forecastMonthEnd, computeMovers, rankByRecent, isInHouse,
   buildRateSeries, compareSpans, machineProblemMatrix, OTHER_PROBLEMS, forecastTrend,
@@ -61,7 +61,7 @@ function ForecastCard({ title, fc }: { title: string; fc: MonthForecast | null }
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">คาดการณ์สิ้นเดือน</p>
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold tabular-nums" style={{ color }}>{fmtK(fc.projected)}</span>
-          <span className="text-sm font-semibold tabular-nums" style={{ color }}>{(fc.projPct * 100).toFixed(0)}%</span>
+          <span className="text-sm font-semibold tabular-nums" style={{ color }}>{isFinite(fc.projPct) ? `${(fc.projPct * 100).toFixed(0)}%` : 'ไม่มี target'}</span>
           <span className="text-xs text-slate-400">ของ target {fmtK(fc.target)}</span>
         </div>
 
@@ -103,7 +103,7 @@ function combineForecasts(a: MonthForecast | null, b: MonthForecast | null): Mon
   return {
     ...earlier, actual, target, projected,
     perDay: a.perDay + b.perDay,
-    projPct: target > 0 ? projected / target : 0,
+    projPct: achRatio(projected, target),
     allowance: target > actual && daysLeft > 0 ? (target - actual) / daysLeft : null,
   }
 }
@@ -485,7 +485,7 @@ function TrendSection({ tf }: { tf: TrendForecast | null }) {
           {/* ส่วนทึบ = ยอดจริง */}
           <Bar dataKey="solid" stackId="m" maxBarSize={BAR} isAnimationActive={false}>
             {chartData.map(p => (
-              <Cell key={p.key} fill={p.target ? achColor((p.actual ?? 0) / p.target) : '#94a3b8'} fillOpacity={0.85}/>
+              <Cell key={p.key} fill={p.target || (p.actual ?? 0) > 0 ? achColor(achRatio(p.actual ?? 0, p.target ?? 0)) : '#94a3b8'} fillOpacity={0.85}/>
             ))}
           </Bar>
           {/* ส่วนกรอบประ = คาดการณ์ (สีตาม % target ของยอดคาดการณ์) + ตัวเลขยอดคาดการณ์บนแท่ง */}

@@ -5,7 +5,7 @@ import {
 import type { WasteRow } from '../types'
 import type { SalesMap } from '../hooks/useSalesData'
 import type { ProductionJobsMap } from '../hooks/useProductionJobs'
-import { pacedTarget } from '../utils/targetPace'
+import { pacedTarget, achRatio } from '../utils/targetPace'
 
 // Tooltip อยู่ทางขวาของเมาส์เสมอ (ไม่พลิกไปซ้ายเมื่อชิดขอบ ล้นออกนอกกราฟได้) และชิดด้านบนของกราฟ
 const TOOLTIP_RIGHT_TOP = { allowEscapeViewBox: { x: true }, position: { y: 0 }, wrapperStyle: { zIndex: 20 } } as const
@@ -136,8 +136,8 @@ function CustomTooltip({ active, label, payload }: { active?: boolean; label?: s
   return (
     <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 14px', fontSize:11, boxShadow:'0 4px 16px var(--shadow)', minWidth:180 }}>
       <p style={{ fontWeight:700, marginBottom:6, color:'var(--text-1)' }}>{label}</p>
-      <p style={{ color: segFill(rpTarget > 0 ? rp / rpTarget : 0), margin:'2px 0' }}>Replan: {fmtFull(rp)}</p>
-      <p style={{ color: segFill(apTarget > 0 ? ap / apTarget : 0), margin:'2px 0' }}>Addpaper: {fmtFull(ap)}</p>
+      <p style={{ color: segFill(achRatio(rp, rpTarget)), margin:'2px 0' }}>Replan: {fmtFull(rp)}</p>
+      <p style={{ color: segFill(achRatio(ap, apTarget)), margin:'2px 0' }}>Addpaper: {fmtFull(ap)}</p>
       <hr style={{ border:'none', borderTop:'1px solid var(--divider)', margin:'6px 0' }}/>
       <p style={{ color:'var(--text-1)', margin:'2px 0', fontWeight:700 }}>Total: {fmtFull(total)}</p>
       {target > 0 && <p style={{ color: COLOR_TARGET, margin:'2px 0' }}>Target: {fmtFull(target)}</p>}
@@ -288,7 +288,7 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <Bar dataKey="addpaperActual" name="addpaperActual" stackId="w" maxBarSize={40} cursor="pointer"
             animationDuration={500} animationEasing="ease-out">
             {data.map((e,i) => {
-              const achPct = e.addpaperPace > 0 ? e.addpaperActual / e.addpaperPace : 0
+              const achPct = achRatio(e.addpaperActual, e.addpaperPace)
               return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_ADDPAPER : segFill(achPct)}
                 stroke="#fff" strokeWidth={1} style={{ transition: 'fill 0.2s ease' }}/>
             })}
@@ -298,7 +298,7 @@ export function CombinedMonthlyChart({ replanRows, addpaperRows, ddMonth, chartM
           <Bar dataKey="replanActual" name="replanActual" stackId="w" maxBarSize={40} cursor="pointer"
             animationDuration={500} animationEasing="ease-out">
             {data.map((e,i) => {
-              const achPct = e.replanPace > 0 ? e.replanActual / e.replanPace : 0
+              const achPct = achRatio(e.replanActual, e.replanPace)
               return <Cell key={i} fill={isGray(e.monthNo) ? GRAY_REPLAN : segFill(achPct)}
                 stroke="#fff" strokeWidth={1} style={{ transition: 'fill 0.2s ease' }}/>
             })}
